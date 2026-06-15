@@ -25,8 +25,8 @@
   - [ ] Ollama provider
   - [ ] Context picker UI
   - [ ] Context preview dialog (show files before cloud send)
-- [ ] Create Compyle Dark theme JSON at `extensions/theme-defaults/themes/compyle-dark.json`
-- [ ] Create Compyle Light theme JSON at `extensions/theme-defaults/themes/compyle-light.json`
+- [x] Create Compyle Dark theme JSON → `extensions/compyle-themes/themes/compyle-dark.json`
+- [x] Create Compyle Light theme JSON → `extensions/compyle-themes/themes/compyle-light.json`
 - [ ] Create `CompyleSoundService` with Minimal sound pack
 - [ ] Connect Extension Shield to extension install lifecycle (hook in `extensionsWorkbenchService.ts`)
 - [ ] Write Compyle welcome screen component (separate from Getting Started)

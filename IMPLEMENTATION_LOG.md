@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-06-15 — Session 2 (Claude Code, branch: claude/funny-cray-xj32la)
+
+### Summary
+Imported the entire Compyle web app theme engine as a built-in VS Code extension.
+
+### Files Created
+
+**`extensions/compyle-themes/package.json`**
+- Extension manifest with `contributes.themes` listing all 334 themes
+- Compyle Dark and Compyle Light pinned at position 0 and 1
+
+**`extensions/compyle-themes/themes/*.json`** (334 files)
+- **91 curated themes**: Carbon, Graphite, Obsidian, Slate Blue, Midnight, Deep Ocean, Void, Eclipse, Jet, Shadow, Paper, Daylight, Cloud, Cream, Linen, Snow, Ivory, Chalk, Ember, Copper, Rust, Amber, Mahogany, Sakura, Nord, Arctic, Tundra, Frost, Glacier, Neon Midnight, Cyber, Synthwave, Retrowave, Vaporwave, Matrix, Hacker, Glitch, Electric, Plasma, Forest, Jungle, Moss, Sage, Pine, Dracula, Dracula Pro, Gruvbox Dark/Light, Tokyo Night/Storm/Day, Monokai, Monokai Pro, Solarized Dark/Light, One Dark/Light, Night Owl/Light, Palenight, Ayu Dark/Mirage/Light, Catppuccin Mocha/Latte, Rose Piné/Dawn, OLED Black/Indigo, Pitch, Zen, Monochrome, Sepia, Parchment, Grape, Lavender, Amethyst, Plum, Ocean, Aqua, Teal, Cobalt, Peacock, Crimson, Maroon, Sunset, Twilight, Aurora, Lunar, Solar, Nebula, Cosmos
+- **241 algorithmically generated themes**: 20 adjectives × 12 nouns palette grid (Mystic, Silent, Golden, Silver, Ancient, Frozen, Burning, Hidden, Sacred, Gentle, Fierce, Calm, Bold, Subtle, Vivid, Muted, Bright, Dim, Warm, Cool) × (Forest, Ocean, Desert, Mountain, Horizon, Eclipse, Abyss, Ember, Crystal, Shadow, Flame, Storm)
+- **2 Compyle brand themes**: Compyle Dark (indigo bg, violet accent) and Compyle Light
+- Each theme includes: 100+ VS Code color keys (editor, sidebar, activity bar, tabs, terminal with 16 ANSI colors, minimap, status bar, title bar, breadcrumbs, debug, peek view, diff editor, notebooks, merge conflicts, settings UI, git decorations, charts), 41 token color scopes, full `semanticTokenColors` map
+- OKLCH color space used throughout with accurate OKLab→linear sRGB→sRGB conversion and gamut clamping
+
+### Files Modified
+
+**`product.json`**
+- `onboardingThemes`: updated to showcase Compyle Dark, Carbon, Tokyo Night, Dracula, Nord, Compyle Light, Paper (replaces generic Solarized entries)
+
+### Compliance
+✅ `npm run compyle:compliance` — PASSING (0 violations)
+
+---
+
 ## 2026-06-15 — Session 1 (Claude Code, branch: claude/funny-cray-xj32la)
 
 ### Summary
