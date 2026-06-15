@@ -141,9 +141,27 @@
 			"type": "dark"
 		},
 		{
-			"id": "dark-2026",
-			"label": "Dark 2026",
-			"themeId": "Dark 2026",
+			"id": "carbon",
+			"label": "Carbon",
+			"themeId": "Carbon",
+			"type": "dark"
+		},
+		{
+			"id": "tokyo-night",
+			"label": "Tokyo Night",
+			"themeId": "Tokyo Night",
+			"type": "dark"
+		},
+		{
+			"id": "dracula",
+			"label": "Dracula",
+			"themeId": "Dracula",
+			"type": "dark"
+		},
+		{
+			"id": "nord",
+			"label": "Nord",
+			"themeId": "Nord",
 			"type": "dark"
 		},
 		{
@@ -153,21 +171,15 @@
 			"type": "hcDark"
 		},
 		{
-			"id": "solarized-dark",
-			"label": "Solarized Dark",
-			"themeId": "Solarized Dark",
-			"type": "dark"
-		},
-		{
 			"id": "compyle-light",
 			"label": "Compyle Light",
 			"themeId": "Compyle Light",
 			"type": "light"
 		},
 		{
-			"id": "light-2026",
-			"label": "Light 2026",
-			"themeId": "Light 2026",
+			"id": "paper",
+			"label": "Paper",
+			"themeId": "Paper",
 			"type": "light"
 		},
 		{
@@ -175,12 +187,6 @@
 			"label": "Light High Contrast",
 			"themeId": "Default High Contrast Light",
 			"type": "hcLight"
-		},
-		{
-			"id": "solarized-light",
-			"label": "Solarized Light",
-			"themeId": "Solarized Light",
-			"type": "light"
 		}
 	],
 	"builtInExtensionsEnabledWithAutoUpdates": [],
