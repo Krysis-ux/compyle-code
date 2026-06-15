@@ -4,6 +4,72 @@
 
 ---
 
+## 2026-06-15 — Session 3 (Claude Code, branch: claude/funny-cray-xj32la)
+
+### Summary
+Added Compyle Workspace Experiences system (four modes: Flow, Focus, Tutor, Resolve) and wired all previously-dead Compyle contribution files into the workbench bundle.
+
+### Critical Fix — Dead Code Wired Up
+All previous Compyle contribution files (`compyleBrain`, `compyleThemes`, `compyleSounds`, `compyleExtensionShield`, `compylePerformance`, `compyleSpec`) were written in previous sessions but never imported into `workbench.common.main.ts`. They were completely inert. All are now imported and active.
+
+### Files Created
+
+**`src/vs/workbench/contrib/compyleModes/common/compyleModes.ts`**
+- Core types: `CompyleModeId`, `ICompyleMode`
+- Constants: `COMPYLE_MODES_STORAGE_KEY`, `COMPYLE_ACTIVE_MODE_SETTING`, `COMPYLE_PROJECT_SETTINGS_PATH`, `COMPYLE_PROJECT_DIR`
+
+**`src/vs/workbench/contrib/compyleModes/common/compyleModesRegistry.ts`**
+- `COMPYLE_MODES: Map<CompyleModeId, ICompyleMode>` — all four modes fully defined
+- `getMode(id)`, `getAllModes()` helpers
+
+**`src/vs/workbench/contrib/compyleModes/browser/compyleTutorConcepts.ts`**
+- `ILearnConcept` interface with beginner/normal/advanced explanations
+- 17 Python concepts, 9 JavaScript concepts, 3 CSS concepts — static lesson cards
+- `detectConcepts(code, languageId)` — regex trigger matching
+- `findConceptForError(message, languageId)` — for error-type concept matching
+
+**`src/vs/workbench/contrib/compyleModes/browser/compyleFlowMemory.ts`**
+- Secret scanning (sk-, ghp_, AKIA, private key headers, password/token patterns)
+- 7 memory file templates (PROJECT_MEMORY.md, RULES.md, ARCHITECTURE.md, CHANGELOG.md, TODO.md, HANDOFF.md, settings.json)
+- Commands: `initProjectMemory`, `openProjectMemory`, `updateProjectMemory`, `generateHandoff`, `generateBugReport`, `cleanProjectMemory`
+- Bug report reads live diagnostics from `IMarkerService`
+
+**`src/vs/workbench/contrib/compyleModes/browser/compyleModeQuickPick.ts`**
+- `openCompyleModeQuickPick(accessor)` — mode switcher UI
+- Saves selection to `compyle.modes.activeMode` in user settings
+- Per-mode post-selection behavior (memory prompt for Flow, info for Focus/Tutor, opens Problems panel for Resolve)
+
+**`src/vs/workbench/contrib/compyleModes/browser/compyleModeStatusBar.ts`**
+- `CompyleModeStatusBarContribution` — shows current mode in status bar
+- Updates on configuration or workbench state change
+- Hidden when mode is `none`
+
+**`src/vs/workbench/contrib/compyleModes/browser/compyleModeWelcome.ts`**
+- `CompyleModeWelcomeContribution` — non-blocking first-open workspace prompt
+- Guards: `askOnFolderOpen` setting, workspace not EMPTY, not already shown, mode not set
+
+**`src/vs/workbench/contrib/compyleModes/browser/compyleModes.contribution.ts`**
+- 9 settings under `compyle.modes.*`
+- 15 commands (all `f1: true`, category: "Compyle")
+- Registers status bar and welcome contributions
+
+**Documentation**
+- `docs/COMPYLE_WORKSPACE_MODES.md` — overview of all 4 modes, switching UX, settings reference
+- `docs/COMPYLE_FLOW_MEMORY.md` — .compyle/ directory structure, file purposes, secret scanning, privacy
+- `docs/COMPYLE_TUTOR_ARCHITECTURE.md` — concept card schema, detection algorithm, full concept coverage table
+- `docs/COMPYLE_RESOLVE_WORKSPACE.md` — debugging workflow, bug report generation, privacy
+
+### Files Modified
+
+**`src/vs/workbench/workbench.common.main.ts`**
+- Added 7 imports for all Compyle contributions (first time they are active in the bundle)
+
+### Compliance
+- `node scripts/check-compliance.mjs` — ✅ passed
+- `npm run compile` — ✅ no TypeScript errors
+
+---
+
 ## 2026-06-15 — Session 2 (Claude Code, branch: claude/funny-cray-xj32la)
 
 ### Summary

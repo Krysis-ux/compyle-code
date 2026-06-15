@@ -136,6 +136,38 @@ All are registered contributions with settings and commands. None have full impl
 - `docs/COMPYLE_CODE_THEME_SYSTEM.md` — Theme architecture and adding new themes
 - `docs/COMPYLE_CODE_SOUND_SYSTEM.md` — Sound service architecture
 
+## What Has Been Done (Session 3 — 2026-06-15)
+
+### Critical Fix — Dead Code Wired
+All previous Compyle contribution files (compyleBrain, compyleThemes, compyleSounds, compyleExtensionShield, compylePerformance, compyleSpec) were never imported. Fixed in `workbench.common.main.ts`.
+
+### Compyle Workspace Experiences (`src/vs/workbench/contrib/compyleModes/`)
+
+Four workspace modes: **Flow** (AI + memory), **Focus** (distraction-free), **Tutor** (learn while coding), **Resolve** (debug + bug reports).
+
+| File | Purpose |
+|------|---------|
+| `common/compyleModes.ts` | `CompyleModeId` type, `ICompyleMode` interface, constants |
+| `common/compyleModesRegistry.ts` | All 4 mode definitions, `COMPYLE_MODES` Map |
+| `browser/compyleModes.contribution.ts` | 9 settings, 15 commands, registers contributions |
+| `browser/compyleModeStatusBar.ts` | Status bar item: `$(zap) Compyle: Flow` |
+| `browser/compyleModeWelcome.ts` | First-open workspace prompt (once per workspace) |
+| `browser/compyleModeQuickPick.ts` | Mode switcher quick pick |
+| `browser/compyleFlowMemory.ts` | .compyle/ memory files, secret scanning, bug reports |
+| `browser/compyleTutorConcepts.ts` | 29 static lesson cards, regex concept detection |
+
+**Settings namespace**: `compyle.modes.*`
+**Active mode setting**: `compyle.modes.activeMode` (flow/focus/tutor/resolve/none)
+**Storage key**: `compyle.modes.selectionShown` (StorageScope.WORKSPACE)
+
+### Documentation Added (Session 3)
+- `docs/COMPYLE_WORKSPACE_MODES.md`
+- `docs/COMPYLE_FLOW_MEMORY.md`
+- `docs/COMPYLE_TUTOR_ARCHITECTURE.md`
+- `docs/COMPYLE_RESOLVE_WORKSPACE.md`
+
+---
+
 ## What Still Needs to Be Done
 
 ### Immediate (Before Any Distribution)
@@ -173,6 +205,11 @@ All are registered contributions with settings and commands. None have full impl
 | Product config | `product.json` (root) |
 | Compliance check | `scripts/check-compliance.mjs` |
 | Extension policy | `src/vs/platform/compyleExtensionPolicy/common/compyleExtensionPolicy.ts` |
+| Workspace Modes types | `src/vs/workbench/contrib/compyleModes/common/compyleModes.ts` |
+| Workspace Modes registry | `src/vs/workbench/contrib/compyleModes/common/compyleModesRegistry.ts` |
+| Workspace Modes contribution | `src/vs/workbench/contrib/compyleModes/browser/compyleModes.contribution.ts` |
+| Flow memory system | `src/vs/workbench/contrib/compyleModes/browser/compyleFlowMemory.ts` |
+| Tutor concept cards | `src/vs/workbench/contrib/compyleModes/browser/compyleTutorConcepts.ts` |
 | Compyle Brain types | `src/vs/workbench/contrib/compyleBrain/common/compyleBrain.ts` |
 | Compyle Brain commands/settings | `src/vs/workbench/contrib/compyleBrain/browser/compyleBrain.contribution.ts` |
 | Marketplace headers | `src/vs/platform/externalServices/common/marketplace.ts` |

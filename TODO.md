@@ -19,6 +19,11 @@
 
 ## 🟠 High Priority (Phase 2)
 
+- [ ] Compyle Tutor panel (WebviewView) — visual lesson card display, not just notifications
+- [ ] Focus mode actual panel hiding — wire `compyle.modes.focus.hideSidePanels` to toggle panels
+- [ ] Memory auto-update detection — file watcher + throttle for `CHANGELOG.md` on save
+- [ ] Sound per-mode behavior — connect mode switching to CompyleSoundService
+- [ ] Tutor "Quiz Me" / "Generate Practice" commands — requires Compyle Brain
 - [ ] Implement `CompyleBrainService` in `src/vs/workbench/contrib/compyleBrain/browser/compyleBrainService.ts`
   - [ ] Anthropic provider (using @anthropic-ai/sdk already in package.json)
   - [ ] OpenAI-compatible provider
@@ -34,8 +39,8 @@
 ## 🟡 Medium Priority (Phase 3)
 
 - [ ] "Build From Idea" quick input with REQUIREMENTS.md generation
-- [ ] Project memory file creation (`.compyle/` directory setup command)
-- [ ] "Generate Project Memory" command — workspace analysis
+- [x] Project memory file creation (`.compyle/` directory setup command) — `compyle.modes.initMemory`
+- [x] "Generate Project Memory" command — writes 7 memory files via `compyleFlowMemory.ts`
 - [ ] Theme gallery panel (grid view with previews)
 - [ ] Favorites system for themes
 - [ ] Random-on-launch theme feature
@@ -67,6 +72,18 @@
 
 ## ✅ Done
 
+- [x] Compyle Workspace Experiences system (Flow, Focus, Tutor, Resolve modes)
+- [x] Mode status bar item (`compyleModeStatusBar.ts`)
+- [x] Mode quick pick switcher (`compyleModeQuickPick.ts`)
+- [x] First-open workspace prompt (`compyleModeWelcome.ts`)
+- [x] Flow memory system (`.compyle/` directory, 7 files, secret scanning)
+- [x] Tutor concept detection (17 Python + 9 JS + 3 CSS lesson cards)
+- [x] Bug report generation from Problems panel diagnostics
+- [x] All Compyle contributions wired into `workbench.common.main.ts` (previously dead code)
+- [x] `docs/COMPYLE_WORKSPACE_MODES.md`
+- [x] `docs/COMPYLE_FLOW_MEMORY.md`
+- [x] `docs/COMPYLE_TUTOR_ARCHITECTURE.md`
+- [x] `docs/COMPYLE_RESOLVE_WORKSPACE.md`
 - [x] Compliance audit document (`docs/legal/COMPYLE_CODE_COMPLIANCE_AUDIT.md`)
 - [x] Legal notices (`docs/legal/COMPYLE_CODE_LEGAL_NOTICES.md`)
 - [x] `product.json` rebranded — all identity fields
