@@ -10,6 +10,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "compyle:compliance": "node scripts/check-compliance.mjs",
+    "compyle:audit": "node scripts/check-compliance.mjs --audit",
     "test": "echo Please run any of the test scripts from the scripts folder.",
     "test-browser": "npx playwright install && node test/unit/browser/index.js",
     "test-browser-no-install": "node test/unit/browser/index.js",

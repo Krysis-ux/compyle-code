@@ -1,0 +1,1695 @@
+{
+	"name": "compyle-themes",
+	"displayName": "Compyle Themes",
+	"description": "332 color themes for Compyle Code \u2014 dark, light, neon, warm, cool, and more.",
+	"version": "1.0.0",
+	"publisher": "compyle",
+	"license": "MIT",
+	"engines": {
+		"vscode": "*"
+	},
+	"categories": [
+		"Themes"
+	],
+	"contributes": {
+		"themes": [
+			{
+				"label": "Compyle Dark",
+				"uiTheme": "vs-dark",
+				"path": "./themes/compyle-dark.json"
+			},
+			{
+				"label": "Compyle Light",
+				"uiTheme": "vs",
+				"path": "./themes/compyle-light.json"
+			},
+			{
+				"label": "Carbon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/carbon.json"
+			},
+			{
+				"label": "Graphite",
+				"uiTheme": "vs-dark",
+				"path": "./themes/graphite.json"
+			},
+			{
+				"label": "Obsidian",
+				"uiTheme": "vs-dark",
+				"path": "./themes/obsidian.json"
+			},
+			{
+				"label": "Slate Blue",
+				"uiTheme": "vs-dark",
+				"path": "./themes/slate-blue.json"
+			},
+			{
+				"label": "Midnight",
+				"uiTheme": "vs-dark",
+				"path": "./themes/midnight.json"
+			},
+			{
+				"label": "Deep Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/deep-ocean.json"
+			},
+			{
+				"label": "Void",
+				"uiTheme": "vs-dark",
+				"path": "./themes/void.json"
+			},
+			{
+				"label": "Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/eclipse.json"
+			},
+			{
+				"label": "Jet",
+				"uiTheme": "vs-dark",
+				"path": "./themes/jet.json"
+			},
+			{
+				"label": "Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/shadow.json"
+			},
+			{
+				"label": "Paper",
+				"uiTheme": "vs",
+				"path": "./themes/paper.json"
+			},
+			{
+				"label": "Daylight",
+				"uiTheme": "vs",
+				"path": "./themes/daylight.json"
+			},
+			{
+				"label": "Cloud",
+				"uiTheme": "vs",
+				"path": "./themes/cloud.json"
+			},
+			{
+				"label": "Cream",
+				"uiTheme": "vs",
+				"path": "./themes/cream.json"
+			},
+			{
+				"label": "Linen",
+				"uiTheme": "vs",
+				"path": "./themes/linen.json"
+			},
+			{
+				"label": "Snow",
+				"uiTheme": "vs",
+				"path": "./themes/snow.json"
+			},
+			{
+				"label": "Ivory",
+				"uiTheme": "vs",
+				"path": "./themes/ivory.json"
+			},
+			{
+				"label": "Chalk",
+				"uiTheme": "vs",
+				"path": "./themes/chalk.json"
+			},
+			{
+				"label": "Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ember.json"
+			},
+			{
+				"label": "Copper",
+				"uiTheme": "vs-dark",
+				"path": "./themes/copper.json"
+			},
+			{
+				"label": "Rust",
+				"uiTheme": "vs-dark",
+				"path": "./themes/rust.json"
+			},
+			{
+				"label": "Amber",
+				"uiTheme": "vs-dark",
+				"path": "./themes/amber.json"
+			},
+			{
+				"label": "Mahogany",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mahogany.json"
+			},
+			{
+				"label": "Sakura",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sakura.json"
+			},
+			{
+				"label": "Nord",
+				"uiTheme": "vs-dark",
+				"path": "./themes/nord.json"
+			},
+			{
+				"label": "Arctic",
+				"uiTheme": "vs-dark",
+				"path": "./themes/arctic.json"
+			},
+			{
+				"label": "Tundra",
+				"uiTheme": "vs-dark",
+				"path": "./themes/tundra.json"
+			},
+			{
+				"label": "Frost",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frost.json"
+			},
+			{
+				"label": "Glacier",
+				"uiTheme": "vs-dark",
+				"path": "./themes/glacier.json"
+			},
+			{
+				"label": "Neon Midnight",
+				"uiTheme": "vs-dark",
+				"path": "./themes/neon-midnight.json"
+			},
+			{
+				"label": "Cyber",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cyber.json"
+			},
+			{
+				"label": "Synthwave",
+				"uiTheme": "vs-dark",
+				"path": "./themes/synthwave.json"
+			},
+			{
+				"label": "Retrowave",
+				"uiTheme": "vs-dark",
+				"path": "./themes/retrowave.json"
+			},
+			{
+				"label": "Vaporwave",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vaporwave.json"
+			},
+			{
+				"label": "Matrix",
+				"uiTheme": "vs-dark",
+				"path": "./themes/matrix.json"
+			},
+			{
+				"label": "Hacker",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hacker.json"
+			},
+			{
+				"label": "Glitch",
+				"uiTheme": "vs-dark",
+				"path": "./themes/glitch.json"
+			},
+			{
+				"label": "Electric",
+				"uiTheme": "vs-dark",
+				"path": "./themes/electric.json"
+			},
+			{
+				"label": "Plasma",
+				"uiTheme": "vs-dark",
+				"path": "./themes/plasma.json"
+			},
+			{
+				"label": "Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/forest.json"
+			},
+			{
+				"label": "Jungle",
+				"uiTheme": "vs-dark",
+				"path": "./themes/jungle.json"
+			},
+			{
+				"label": "Moss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/moss.json"
+			},
+			{
+				"label": "Sage",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sage.json"
+			},
+			{
+				"label": "Pine",
+				"uiTheme": "vs-dark",
+				"path": "./themes/pine.json"
+			},
+			{
+				"label": "Dracula",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dracula.json"
+			},
+			{
+				"label": "Dracula Pro",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dracula-pro.json"
+			},
+			{
+				"label": "Gruvbox Dark",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gruvbox-dark.json"
+			},
+			{
+				"label": "Gruvbox Light",
+				"uiTheme": "vs",
+				"path": "./themes/gruvbox-light.json"
+			},
+			{
+				"label": "Tokyo Night",
+				"uiTheme": "vs-dark",
+				"path": "./themes/tokyo-night.json"
+			},
+			{
+				"label": "Tokyo Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/tokyo-storm.json"
+			},
+			{
+				"label": "Tokyo Day",
+				"uiTheme": "vs",
+				"path": "./themes/tokyo-day.json"
+			},
+			{
+				"label": "Monokai",
+				"uiTheme": "vs-dark",
+				"path": "./themes/monokai.json"
+			},
+			{
+				"label": "Monokai Pro",
+				"uiTheme": "vs-dark",
+				"path": "./themes/monokai-pro.json"
+			},
+			{
+				"label": "Solarized Dark",
+				"uiTheme": "vs-dark",
+				"path": "./themes/solarized-dark.json"
+			},
+			{
+				"label": "Solarized Light",
+				"uiTheme": "vs",
+				"path": "./themes/solarized-light.json"
+			},
+			{
+				"label": "One Dark",
+				"uiTheme": "vs-dark",
+				"path": "./themes/one-dark.json"
+			},
+			{
+				"label": "One Light",
+				"uiTheme": "vs",
+				"path": "./themes/one-light.json"
+			},
+			{
+				"label": "Night Owl",
+				"uiTheme": "vs-dark",
+				"path": "./themes/night-owl.json"
+			},
+			{
+				"label": "Night Owl Light",
+				"uiTheme": "vs",
+				"path": "./themes/night-owl-light.json"
+			},
+			{
+				"label": "Palenight",
+				"uiTheme": "vs-dark",
+				"path": "./themes/palenight.json"
+			},
+			{
+				"label": "Ayu Dark",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ayu-dark.json"
+			},
+			{
+				"label": "Ayu Mirage",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ayu-mirage.json"
+			},
+			{
+				"label": "Ayu Light",
+				"uiTheme": "vs",
+				"path": "./themes/ayu-light.json"
+			},
+			{
+				"label": "Catppuccin Mocha",
+				"uiTheme": "vs-dark",
+				"path": "./themes/catppuccin-mocha.json"
+			},
+			{
+				"label": "Catppuccin Latte",
+				"uiTheme": "vs",
+				"path": "./themes/catppuccin-latte.json"
+			},
+			{
+				"label": "Rose Pine",
+				"uiTheme": "vs-dark",
+				"path": "./themes/rose-pine.json"
+			},
+			{
+				"label": "Rose Pine Dawn",
+				"uiTheme": "vs",
+				"path": "./themes/rose-pine-dawn.json"
+			},
+			{
+				"label": "OLED Black",
+				"uiTheme": "vs-dark",
+				"path": "./themes/oled-black.json"
+			},
+			{
+				"label": "OLED Indigo",
+				"uiTheme": "vs-dark",
+				"path": "./themes/oled-indigo.json"
+			},
+			{
+				"label": "Pitch",
+				"uiTheme": "vs-dark",
+				"path": "./themes/pitch.json"
+			},
+			{
+				"label": "Zen",
+				"uiTheme": "vs-dark",
+				"path": "./themes/zen.json"
+			},
+			{
+				"label": "Monochrome",
+				"uiTheme": "vs-dark",
+				"path": "./themes/monochrome.json"
+			},
+			{
+				"label": "Sepia",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sepia.json"
+			},
+			{
+				"label": "Parchment",
+				"uiTheme": "vs",
+				"path": "./themes/parchment.json"
+			},
+			{
+				"label": "Grape",
+				"uiTheme": "vs-dark",
+				"path": "./themes/grape.json"
+			},
+			{
+				"label": "Lavender",
+				"uiTheme": "vs-dark",
+				"path": "./themes/lavender.json"
+			},
+			{
+				"label": "Amethyst",
+				"uiTheme": "vs-dark",
+				"path": "./themes/amethyst.json"
+			},
+			{
+				"label": "Plum",
+				"uiTheme": "vs-dark",
+				"path": "./themes/plum.json"
+			},
+			{
+				"label": "Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ocean.json"
+			},
+			{
+				"label": "Aqua",
+				"uiTheme": "vs-dark",
+				"path": "./themes/aqua.json"
+			},
+			{
+				"label": "Teal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/teal.json"
+			},
+			{
+				"label": "Cobalt",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cobalt.json"
+			},
+			{
+				"label": "Peacock",
+				"uiTheme": "vs-dark",
+				"path": "./themes/peacock.json"
+			},
+			{
+				"label": "Crimson",
+				"uiTheme": "vs-dark",
+				"path": "./themes/crimson.json"
+			},
+			{
+				"label": "Maroon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/maroon.json"
+			},
+			{
+				"label": "Sunset",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sunset.json"
+			},
+			{
+				"label": "Twilight",
+				"uiTheme": "vs-dark",
+				"path": "./themes/twilight.json"
+			},
+			{
+				"label": "Aurora",
+				"uiTheme": "vs-dark",
+				"path": "./themes/aurora.json"
+			},
+			{
+				"label": "Lunar",
+				"uiTheme": "vs-dark",
+				"path": "./themes/lunar.json"
+			},
+			{
+				"label": "Solar",
+				"uiTheme": "vs-dark",
+				"path": "./themes/solar.json"
+			},
+			{
+				"label": "Nebula",
+				"uiTheme": "vs-dark",
+				"path": "./themes/nebula.json"
+			},
+			{
+				"label": "Cosmos",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cosmos.json"
+			},
+			{
+				"label": "Mystic Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-forest.json"
+			},
+			{
+				"label": "Mystic Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-ocean.json"
+			},
+			{
+				"label": "Mystic Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-desert.json"
+			},
+			{
+				"label": "Mystic Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-mountain.json"
+			},
+			{
+				"label": "Mystic Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-horizon.json"
+			},
+			{
+				"label": "Mystic Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-eclipse.json"
+			},
+			{
+				"label": "Mystic Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-abyss.json"
+			},
+			{
+				"label": "Mystic Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-ember.json"
+			},
+			{
+				"label": "Mystic Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-crystal.json"
+			},
+			{
+				"label": "Mystic Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-shadow.json"
+			},
+			{
+				"label": "Mystic Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-flame.json"
+			},
+			{
+				"label": "Mystic Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/mystic-storm.json"
+			},
+			{
+				"label": "Silent Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-forest.json"
+			},
+			{
+				"label": "Silent Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-ocean.json"
+			},
+			{
+				"label": "Silent Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-desert.json"
+			},
+			{
+				"label": "Silent Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-mountain.json"
+			},
+			{
+				"label": "Silent Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-horizon.json"
+			},
+			{
+				"label": "Silent Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-eclipse.json"
+			},
+			{
+				"label": "Silent Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-abyss.json"
+			},
+			{
+				"label": "Silent Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-ember.json"
+			},
+			{
+				"label": "Silent Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-crystal.json"
+			},
+			{
+				"label": "Silent Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-shadow.json"
+			},
+			{
+				"label": "Silent Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-flame.json"
+			},
+			{
+				"label": "Silent Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/silent-storm.json"
+			},
+			{
+				"label": "Golden Forest",
+				"uiTheme": "vs",
+				"path": "./themes/golden-forest.json"
+			},
+			{
+				"label": "Golden Ocean",
+				"uiTheme": "vs",
+				"path": "./themes/golden-ocean.json"
+			},
+			{
+				"label": "Golden Desert",
+				"uiTheme": "vs",
+				"path": "./themes/golden-desert.json"
+			},
+			{
+				"label": "Golden Mountain",
+				"uiTheme": "vs",
+				"path": "./themes/golden-mountain.json"
+			},
+			{
+				"label": "Golden Horizon",
+				"uiTheme": "vs",
+				"path": "./themes/golden-horizon.json"
+			},
+			{
+				"label": "Golden Eclipse",
+				"uiTheme": "vs",
+				"path": "./themes/golden-eclipse.json"
+			},
+			{
+				"label": "Golden Abyss",
+				"uiTheme": "vs",
+				"path": "./themes/golden-abyss.json"
+			},
+			{
+				"label": "Golden Ember",
+				"uiTheme": "vs",
+				"path": "./themes/golden-ember.json"
+			},
+			{
+				"label": "Golden Crystal",
+				"uiTheme": "vs",
+				"path": "./themes/golden-crystal.json"
+			},
+			{
+				"label": "Golden Shadow",
+				"uiTheme": "vs",
+				"path": "./themes/golden-shadow.json"
+			},
+			{
+				"label": "Golden Flame",
+				"uiTheme": "vs",
+				"path": "./themes/golden-flame.json"
+			},
+			{
+				"label": "Golden Storm",
+				"uiTheme": "vs",
+				"path": "./themes/golden-storm.json"
+			},
+			{
+				"label": "Silver Forest",
+				"uiTheme": "vs",
+				"path": "./themes/silver-forest.json"
+			},
+			{
+				"label": "Silver Ocean",
+				"uiTheme": "vs",
+				"path": "./themes/silver-ocean.json"
+			},
+			{
+				"label": "Silver Desert",
+				"uiTheme": "vs",
+				"path": "./themes/silver-desert.json"
+			},
+			{
+				"label": "Silver Mountain",
+				"uiTheme": "vs",
+				"path": "./themes/silver-mountain.json"
+			},
+			{
+				"label": "Silver Horizon",
+				"uiTheme": "vs",
+				"path": "./themes/silver-horizon.json"
+			},
+			{
+				"label": "Silver Eclipse",
+				"uiTheme": "vs",
+				"path": "./themes/silver-eclipse.json"
+			},
+			{
+				"label": "Silver Abyss",
+				"uiTheme": "vs",
+				"path": "./themes/silver-abyss.json"
+			},
+			{
+				"label": "Silver Ember",
+				"uiTheme": "vs",
+				"path": "./themes/silver-ember.json"
+			},
+			{
+				"label": "Silver Crystal",
+				"uiTheme": "vs",
+				"path": "./themes/silver-crystal.json"
+			},
+			{
+				"label": "Silver Shadow",
+				"uiTheme": "vs",
+				"path": "./themes/silver-shadow.json"
+			},
+			{
+				"label": "Silver Flame",
+				"uiTheme": "vs",
+				"path": "./themes/silver-flame.json"
+			},
+			{
+				"label": "Silver Storm",
+				"uiTheme": "vs",
+				"path": "./themes/silver-storm.json"
+			},
+			{
+				"label": "Ancient Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-forest.json"
+			},
+			{
+				"label": "Ancient Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-ocean.json"
+			},
+			{
+				"label": "Ancient Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-desert.json"
+			},
+			{
+				"label": "Ancient Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-mountain.json"
+			},
+			{
+				"label": "Ancient Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-horizon.json"
+			},
+			{
+				"label": "Ancient Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-eclipse.json"
+			},
+			{
+				"label": "Ancient Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-abyss.json"
+			},
+			{
+				"label": "Ancient Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-ember.json"
+			},
+			{
+				"label": "Ancient Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-crystal.json"
+			},
+			{
+				"label": "Ancient Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-shadow.json"
+			},
+			{
+				"label": "Ancient Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-flame.json"
+			},
+			{
+				"label": "Ancient Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/ancient-storm.json"
+			},
+			{
+				"label": "Frozen Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-forest.json"
+			},
+			{
+				"label": "Frozen Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-ocean.json"
+			},
+			{
+				"label": "Frozen Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-desert.json"
+			},
+			{
+				"label": "Frozen Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-mountain.json"
+			},
+			{
+				"label": "Frozen Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-horizon.json"
+			},
+			{
+				"label": "Frozen Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-eclipse.json"
+			},
+			{
+				"label": "Frozen Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-abyss.json"
+			},
+			{
+				"label": "Frozen Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-ember.json"
+			},
+			{
+				"label": "Frozen Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-crystal.json"
+			},
+			{
+				"label": "Frozen Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-shadow.json"
+			},
+			{
+				"label": "Frozen Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-flame.json"
+			},
+			{
+				"label": "Frozen Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/frozen-storm.json"
+			},
+			{
+				"label": "Burning Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-forest.json"
+			},
+			{
+				"label": "Burning Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-ocean.json"
+			},
+			{
+				"label": "Burning Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-desert.json"
+			},
+			{
+				"label": "Burning Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-mountain.json"
+			},
+			{
+				"label": "Burning Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-horizon.json"
+			},
+			{
+				"label": "Burning Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-eclipse.json"
+			},
+			{
+				"label": "Burning Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-abyss.json"
+			},
+			{
+				"label": "Burning Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-ember.json"
+			},
+			{
+				"label": "Burning Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-crystal.json"
+			},
+			{
+				"label": "Burning Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-shadow.json"
+			},
+			{
+				"label": "Burning Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-flame.json"
+			},
+			{
+				"label": "Burning Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/burning-storm.json"
+			},
+			{
+				"label": "Hidden Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-forest.json"
+			},
+			{
+				"label": "Hidden Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-ocean.json"
+			},
+			{
+				"label": "Hidden Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-desert.json"
+			},
+			{
+				"label": "Hidden Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-mountain.json"
+			},
+			{
+				"label": "Hidden Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-horizon.json"
+			},
+			{
+				"label": "Hidden Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-eclipse.json"
+			},
+			{
+				"label": "Hidden Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-abyss.json"
+			},
+			{
+				"label": "Hidden Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-ember.json"
+			},
+			{
+				"label": "Hidden Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-crystal.json"
+			},
+			{
+				"label": "Hidden Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-shadow.json"
+			},
+			{
+				"label": "Hidden Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-flame.json"
+			},
+			{
+				"label": "Hidden Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/hidden-storm.json"
+			},
+			{
+				"label": "Sacred Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-forest.json"
+			},
+			{
+				"label": "Sacred Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-ocean.json"
+			},
+			{
+				"label": "Sacred Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-desert.json"
+			},
+			{
+				"label": "Sacred Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-mountain.json"
+			},
+			{
+				"label": "Sacred Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-horizon.json"
+			},
+			{
+				"label": "Sacred Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-eclipse.json"
+			},
+			{
+				"label": "Sacred Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-abyss.json"
+			},
+			{
+				"label": "Sacred Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-ember.json"
+			},
+			{
+				"label": "Sacred Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-crystal.json"
+			},
+			{
+				"label": "Sacred Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-shadow.json"
+			},
+			{
+				"label": "Sacred Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-flame.json"
+			},
+			{
+				"label": "Sacred Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/sacred-storm.json"
+			},
+			{
+				"label": "Gentle Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-forest.json"
+			},
+			{
+				"label": "Gentle Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-ocean.json"
+			},
+			{
+				"label": "Gentle Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-desert.json"
+			},
+			{
+				"label": "Gentle Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-mountain.json"
+			},
+			{
+				"label": "Gentle Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-horizon.json"
+			},
+			{
+				"label": "Gentle Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-eclipse.json"
+			},
+			{
+				"label": "Gentle Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-abyss.json"
+			},
+			{
+				"label": "Gentle Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-ember.json"
+			},
+			{
+				"label": "Gentle Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-crystal.json"
+			},
+			{
+				"label": "Gentle Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-shadow.json"
+			},
+			{
+				"label": "Gentle Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-flame.json"
+			},
+			{
+				"label": "Gentle Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/gentle-storm.json"
+			},
+			{
+				"label": "Fierce Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-forest.json"
+			},
+			{
+				"label": "Fierce Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-ocean.json"
+			},
+			{
+				"label": "Fierce Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-desert.json"
+			},
+			{
+				"label": "Fierce Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-mountain.json"
+			},
+			{
+				"label": "Fierce Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-horizon.json"
+			},
+			{
+				"label": "Fierce Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-eclipse.json"
+			},
+			{
+				"label": "Fierce Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-abyss.json"
+			},
+			{
+				"label": "Fierce Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-ember.json"
+			},
+			{
+				"label": "Fierce Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-crystal.json"
+			},
+			{
+				"label": "Fierce Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-shadow.json"
+			},
+			{
+				"label": "Fierce Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-flame.json"
+			},
+			{
+				"label": "Fierce Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/fierce-storm.json"
+			},
+			{
+				"label": "Calm Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-forest.json"
+			},
+			{
+				"label": "Calm Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-ocean.json"
+			},
+			{
+				"label": "Calm Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-desert.json"
+			},
+			{
+				"label": "Calm Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-mountain.json"
+			},
+			{
+				"label": "Calm Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-horizon.json"
+			},
+			{
+				"label": "Calm Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-eclipse.json"
+			},
+			{
+				"label": "Calm Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-abyss.json"
+			},
+			{
+				"label": "Calm Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-ember.json"
+			},
+			{
+				"label": "Calm Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-crystal.json"
+			},
+			{
+				"label": "Calm Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-shadow.json"
+			},
+			{
+				"label": "Calm Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-flame.json"
+			},
+			{
+				"label": "Calm Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/calm-storm.json"
+			},
+			{
+				"label": "Bold Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-forest.json"
+			},
+			{
+				"label": "Bold Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-ocean.json"
+			},
+			{
+				"label": "Bold Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-desert.json"
+			},
+			{
+				"label": "Bold Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-mountain.json"
+			},
+			{
+				"label": "Bold Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-horizon.json"
+			},
+			{
+				"label": "Bold Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-eclipse.json"
+			},
+			{
+				"label": "Bold Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-abyss.json"
+			},
+			{
+				"label": "Bold Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-ember.json"
+			},
+			{
+				"label": "Bold Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-crystal.json"
+			},
+			{
+				"label": "Bold Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-shadow.json"
+			},
+			{
+				"label": "Bold Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-flame.json"
+			},
+			{
+				"label": "Bold Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/bold-storm.json"
+			},
+			{
+				"label": "Subtle Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-forest.json"
+			},
+			{
+				"label": "Subtle Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-ocean.json"
+			},
+			{
+				"label": "Subtle Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-desert.json"
+			},
+			{
+				"label": "Subtle Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-mountain.json"
+			},
+			{
+				"label": "Subtle Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-horizon.json"
+			},
+			{
+				"label": "Subtle Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-eclipse.json"
+			},
+			{
+				"label": "Subtle Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-abyss.json"
+			},
+			{
+				"label": "Subtle Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-ember.json"
+			},
+			{
+				"label": "Subtle Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-crystal.json"
+			},
+			{
+				"label": "Subtle Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-shadow.json"
+			},
+			{
+				"label": "Subtle Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-flame.json"
+			},
+			{
+				"label": "Subtle Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/subtle-storm.json"
+			},
+			{
+				"label": "Vivid Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-forest.json"
+			},
+			{
+				"label": "Vivid Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-ocean.json"
+			},
+			{
+				"label": "Vivid Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-desert.json"
+			},
+			{
+				"label": "Vivid Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-mountain.json"
+			},
+			{
+				"label": "Vivid Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-horizon.json"
+			},
+			{
+				"label": "Vivid Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-eclipse.json"
+			},
+			{
+				"label": "Vivid Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-abyss.json"
+			},
+			{
+				"label": "Vivid Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-ember.json"
+			},
+			{
+				"label": "Vivid Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-crystal.json"
+			},
+			{
+				"label": "Vivid Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-shadow.json"
+			},
+			{
+				"label": "Vivid Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-flame.json"
+			},
+			{
+				"label": "Vivid Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/vivid-storm.json"
+			},
+			{
+				"label": "Muted Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-forest.json"
+			},
+			{
+				"label": "Muted Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-ocean.json"
+			},
+			{
+				"label": "Muted Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-desert.json"
+			},
+			{
+				"label": "Muted Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-mountain.json"
+			},
+			{
+				"label": "Muted Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-horizon.json"
+			},
+			{
+				"label": "Muted Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-eclipse.json"
+			},
+			{
+				"label": "Muted Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-abyss.json"
+			},
+			{
+				"label": "Muted Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-ember.json"
+			},
+			{
+				"label": "Muted Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-crystal.json"
+			},
+			{
+				"label": "Muted Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-shadow.json"
+			},
+			{
+				"label": "Muted Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-flame.json"
+			},
+			{
+				"label": "Muted Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/muted-storm.json"
+			},
+			{
+				"label": "Bright Forest",
+				"uiTheme": "vs",
+				"path": "./themes/bright-forest.json"
+			},
+			{
+				"label": "Bright Ocean",
+				"uiTheme": "vs",
+				"path": "./themes/bright-ocean.json"
+			},
+			{
+				"label": "Bright Desert",
+				"uiTheme": "vs",
+				"path": "./themes/bright-desert.json"
+			},
+			{
+				"label": "Bright Mountain",
+				"uiTheme": "vs",
+				"path": "./themes/bright-mountain.json"
+			},
+			{
+				"label": "Bright Horizon",
+				"uiTheme": "vs",
+				"path": "./themes/bright-horizon.json"
+			},
+			{
+				"label": "Bright Eclipse",
+				"uiTheme": "vs",
+				"path": "./themes/bright-eclipse.json"
+			},
+			{
+				"label": "Bright Abyss",
+				"uiTheme": "vs",
+				"path": "./themes/bright-abyss.json"
+			},
+			{
+				"label": "Bright Ember",
+				"uiTheme": "vs",
+				"path": "./themes/bright-ember.json"
+			},
+			{
+				"label": "Bright Crystal",
+				"uiTheme": "vs",
+				"path": "./themes/bright-crystal.json"
+			},
+			{
+				"label": "Bright Shadow",
+				"uiTheme": "vs",
+				"path": "./themes/bright-shadow.json"
+			},
+			{
+				"label": "Bright Flame",
+				"uiTheme": "vs",
+				"path": "./themes/bright-flame.json"
+			},
+			{
+				"label": "Bright Storm",
+				"uiTheme": "vs",
+				"path": "./themes/bright-storm.json"
+			},
+			{
+				"label": "Dim Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-forest.json"
+			},
+			{
+				"label": "Dim Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-ocean.json"
+			},
+			{
+				"label": "Dim Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-desert.json"
+			},
+			{
+				"label": "Dim Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-mountain.json"
+			},
+			{
+				"label": "Dim Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-horizon.json"
+			},
+			{
+				"label": "Dim Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-eclipse.json"
+			},
+			{
+				"label": "Dim Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-abyss.json"
+			},
+			{
+				"label": "Dim Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-ember.json"
+			},
+			{
+				"label": "Dim Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-crystal.json"
+			},
+			{
+				"label": "Dim Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-shadow.json"
+			},
+			{
+				"label": "Dim Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-flame.json"
+			},
+			{
+				"label": "Dim Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/dim-storm.json"
+			},
+			{
+				"label": "Warm Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-forest.json"
+			},
+			{
+				"label": "Warm Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-ocean.json"
+			},
+			{
+				"label": "Warm Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-desert.json"
+			},
+			{
+				"label": "Warm Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-mountain.json"
+			},
+			{
+				"label": "Warm Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-horizon.json"
+			},
+			{
+				"label": "Warm Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-eclipse.json"
+			},
+			{
+				"label": "Warm Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-abyss.json"
+			},
+			{
+				"label": "Warm Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-ember.json"
+			},
+			{
+				"label": "Warm Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-crystal.json"
+			},
+			{
+				"label": "Warm Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-shadow.json"
+			},
+			{
+				"label": "Warm Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-flame.json"
+			},
+			{
+				"label": "Warm Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/warm-storm.json"
+			},
+			{
+				"label": "Cool Forest",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-forest.json"
+			},
+			{
+				"label": "Cool Ocean",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-ocean.json"
+			},
+			{
+				"label": "Cool Desert",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-desert.json"
+			},
+			{
+				"label": "Cool Mountain",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-mountain.json"
+			},
+			{
+				"label": "Cool Horizon",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-horizon.json"
+			},
+			{
+				"label": "Cool Eclipse",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-eclipse.json"
+			},
+			{
+				"label": "Cool Abyss",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-abyss.json"
+			},
+			{
+				"label": "Cool Ember",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-ember.json"
+			},
+			{
+				"label": "Cool Crystal",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-crystal.json"
+			},
+			{
+				"label": "Cool Shadow",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-shadow.json"
+			},
+			{
+				"label": "Cool Flame",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-flame.json"
+			},
+			{
+				"label": "Cool Storm",
+				"uiTheme": "vs-dark",
+				"path": "./themes/cool-storm.json"
+			}
+		]
+	},
+	"scripts": {
+		"update-grammar": "node ./build/update-grammars.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/krysis-ux/compyle-code.git"
+	}
+}

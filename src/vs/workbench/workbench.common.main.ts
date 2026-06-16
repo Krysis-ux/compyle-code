@@ -468,4 +468,25 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 // Opener
 import './contrib/opener/browser/opener.contribution.js';
 
+// Compyle Workspace Experiences
+import './contrib/compyleModes/browser/compyleModes.contribution.js';
+
+// Compyle Brain (AI)
+import './contrib/compyleBrain/browser/compyleBrain.contribution.js';
+
+// Compyle Sounds
+import './contrib/compyleSounds/browser/compyleSounds.contribution.js';
+
+// Compyle Themes
+import './contrib/compyleThemes/browser/compyleThemes.contribution.js';
+
+// Compyle Extension Shield
+import './contrib/compyleExtensionShield/browser/compyleExtensionShield.contribution.js';
+
+// Compyle Performance
+import './contrib/compylePerformance/browser/compylePerformance.contribution.js';
+
+// Compyle Spec-Driven Development
+import './contrib/compyleSpec/browser/compyleSpec.contribution.js';
+
 //#endregion
