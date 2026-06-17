@@ -467,7 +467,12 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		await super.setInput(input, options, context, token);
 	}
 
-	layout(_dimension: Dimension): void {
-		// CSS handles layout.
+	layout(dimension: Dimension): void {
+		// Give the scroll container an explicit size so overflow-y: auto can scroll the
+		// (now much taller) content instead of clipping it.
+		if (this._root) {
+			this._root.style.height = `${dimension.height}px`;
+			this._root.style.width = `${dimension.width}px`;
+		}
 	}
 }
