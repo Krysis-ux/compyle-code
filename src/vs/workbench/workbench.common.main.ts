@@ -536,8 +536,9 @@ import './contrib/compyleWelcome/browser/compyleWelcome.contribution.js';
 // Compyle premium editor defaults
 import './contrib/compyleDefaults/browser/compyleDefaults.contribution.js';
 
-// Compyle AI selection actions (Explain / Comment / Refactor / Tests)
+// Compyle AI selection actions (Explain / Comment / Refactor / Tests) + explorer file actions
 import './contrib/compyleSelectionActions/browser/compyleSelectionActions.contribution.js';
+import './contrib/compyleSelectionActions/browser/compyleExplorerActions.contribution.js';
 
 // Compyle AI commit messages (core command; UI lives in the compyle-git-ai extension)
 import './contrib/compyleCommitMessage/browser/compyleCommitMessage.contribution.js';
