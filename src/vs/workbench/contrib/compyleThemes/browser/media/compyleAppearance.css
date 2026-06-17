@@ -1,0 +1,154 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/*
+ * Global UI Pack styling. All rules are scoped under `.compyle-appearance-active`
+ * (set on the workbench container by CompyleAppearanceService) so they only take
+ * effect when a UI Pack is applied. Values come from `--compyle-*` design tokens.
+ */
+
+/* ---- Corner radius -------------------------------------------------------- */
+
+.compyle-appearance-active .monaco-button,
+.compyle-appearance-active .monaco-text-button,
+.compyle-appearance-active .monaco-inputbox,
+.compyle-appearance-active .monaco-select-box,
+.compyle-appearance-active .monaco-count-badge,
+.compyle-appearance-active .quick-input-widget,
+.compyle-appearance-active .editor-widget.suggest-widget,
+.compyle-appearance-active .monaco-hover,
+.compyle-appearance-active .monaco-editor .find-widget,
+.compyle-appearance-active .notifications-toasts .notification-toast,
+.compyle-appearance-active .monaco-menu-container,
+.compyle-appearance-active .monaco-list .monaco-list-row,
+.compyle-appearance-active .monaco-action-bar .action-item.menu-entry .action-label {
+	border-radius: var(--compyle-radius);
+}
+
+/* ---- Shadow / depth on floating surfaces --------------------------------- */
+
+.compyle-appearance-active .quick-input-widget,
+.compyle-appearance-active .editor-widget.suggest-widget,
+.compyle-appearance-active .monaco-hover,
+.compyle-appearance-active .monaco-editor .find-widget,
+.compyle-appearance-active .notifications-toasts .notification-toast,
+.compyle-appearance-active .monaco-menu-container {
+	box-shadow: var(--compyle-shadow);
+}
+
+/* ---- Glass: translucent + blurred floating overlays only ----------------- */
+/* Docked parts (sidebar/panel) are intentionally excluded; there is nothing
+ * behind them inside the window, so backdrop-filter would reveal the desktop. */
+
+.compyle-glass .quick-input-widget {
+	background-color: color-mix(in srgb, var(--vscode-quickInput-background) calc(var(--compyle-glass-opacity) * 100%), transparent);
+	backdrop-filter: blur(var(--compyle-blur));
+}
+
+.compyle-glass .editor-widget.suggest-widget {
+	background-color: color-mix(in srgb, var(--vscode-editorSuggestWidget-background) calc(var(--compyle-glass-opacity) * 100%), transparent);
+	backdrop-filter: blur(var(--compyle-blur));
+}
+
+.compyle-glass .monaco-hover {
+	background-color: color-mix(in srgb, var(--vscode-editorHoverWidget-background) calc(var(--compyle-glass-opacity) * 100%), transparent);
+	backdrop-filter: blur(var(--compyle-blur));
+}
+
+.compyle-glass .notifications-toasts .notification-toast {
+	background-color: color-mix(in srgb, var(--vscode-notifications-background) calc(var(--compyle-glass-opacity) * 100%), transparent);
+	backdrop-filter: blur(var(--compyle-blur));
+}
+
+.compyle-glass .monaco-menu .monaco-menu-container {
+	background-color: color-mix(in srgb, var(--vscode-menu-background) calc(var(--compyle-glass-opacity) * 100%), transparent);
+	backdrop-filter: blur(var(--compyle-blur));
+}
+
+/* ---- Liquid Glass Full Mode --------------------------------------------- */
+/* Applies glass to workbench chrome and Compyle task surfaces. Dense content
+ * surfaces stay opaque enough for code, terminal, notebook, diff, and webview
+ * readability.
+ */
+
+.compyle-liquid-glass-full {
+	/* Accent-tinted edges + a brighter top highlight read as Apple-style "liquid glass". */
+	--compyle-glass-border: color-mix(in srgb, var(--compyle-accent) 22%, color-mix(in srgb, var(--vscode-foreground) 16%, transparent));
+	--compyle-glass-highlight: color-mix(in srgb, #ffffff 26%, transparent);
+	--compyle-glass-surface: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) calc(var(--compyle-glass-opacity) * 100%), transparent);
+	/* Shared backdrop recipe: blur + lively saturation/brightness so surfaces feel like glass. */
+	--compyle-glass-backdrop: blur(var(--compyle-blur)) saturate(1.4) brightness(1.06);
+}
+
+.compyle-liquid-glass-full .monaco-workbench {
+	background:
+		linear-gradient(135deg, color-mix(in srgb, var(--vscode-editor-background) 92%, var(--compyle-accent) 8%), var(--vscode-editor-background) 44%, color-mix(in srgb, var(--vscode-editor-background) 94%, #ffffff 6%)),
+		var(--vscode-editor-background);
+}
+
+.compyle-liquid-glass-full .monaco-workbench .part.activitybar,
+.compyle-liquid-glass-full .monaco-workbench .part.sidebar,
+.compyle-liquid-glass-full .monaco-workbench .part.panel,
+.compyle-liquid-glass-full .monaco-workbench .part.auxiliarybar,
+.compyle-liquid-glass-full .monaco-workbench .part.statusbar,
+.compyle-liquid-glass-full .monaco-workbench .composite.title,
+.compyle-liquid-glass-full .monaco-workbench .editor-group-container > .title,
+.compyle-liquid-glass-full .compyle-panel,
+.compyle-liquid-glass-full .compyle-card {
+	background-color: var(--compyle-glass-surface) !important;
+	backdrop-filter: var(--compyle-glass-backdrop);
+	border-color: var(--compyle-glass-border) !important;
+	box-shadow: inset 0 1px 0 var(--compyle-glass-highlight), inset 0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent);
+}
+
+.compyle-liquid-glass-full .monaco-workbench .tabs-container > .tab {
+	background-color: color-mix(in srgb, var(--vscode-tab-inactiveBackground, var(--vscode-editor-background)) 74%, transparent) !important;
+	backdrop-filter: blur(calc(var(--compyle-blur) * 0.72)) saturate(1.12);
+	border-right-color: var(--compyle-glass-border) !important;
+}
+
+.compyle-liquid-glass-full .monaco-workbench .tabs-container > .tab.active {
+	background-color: color-mix(in srgb, var(--vscode-tab-activeBackground, var(--vscode-editor-background)) 86%, transparent) !important;
+	box-shadow: inset 0 1px 0 var(--compyle-glass-highlight), 0 0 0 1px color-mix(in srgb, var(--compyle-accent) 32%, transparent);
+}
+
+.compyle-liquid-glass-full .monaco-workbench .activitybar .monaco-action-bar .action-item.checked .action-label,
+.compyle-liquid-glass-full .monaco-workbench .monaco-list .monaco-list-row.focused,
+.compyle-liquid-glass-full .monaco-workbench .monaco-list .monaco-list-row.selected,
+.compyle-liquid-glass-full .compyle-card.selected {
+	background-color: color-mix(in srgb, var(--compyle-accent) 18%, transparent) !important;
+}
+
+.compyle-liquid-glass-full .quick-input-widget,
+.compyle-liquid-glass-full .editor-widget.suggest-widget,
+.compyle-liquid-glass-full .monaco-hover,
+.compyle-liquid-glass-full .monaco-editor .find-widget,
+.compyle-liquid-glass-full .notifications-toasts .notification-toast,
+.compyle-liquid-glass-full .monaco-menu-container {
+	border: 1px solid var(--compyle-glass-border);
+	box-shadow: inset 0 1px 0 var(--compyle-glass-highlight), var(--compyle-shadow);
+	backdrop-filter: var(--compyle-glass-backdrop);
+}
+
+.compyle-liquid-glass-full .monaco-workbench .part.editor,
+.compyle-liquid-glass-full .monaco-editor,
+.compyle-liquid-glass-full .xterm,
+.compyle-liquid-glass-full .notebookOverlay,
+.compyle-liquid-glass-full .notebook-editor,
+.compyle-liquid-glass-full .monaco-diff-editor,
+.compyle-liquid-glass-full iframe,
+.compyle-liquid-glass-full webview {
+	backdrop-filter: none !important;
+}
+
+/* ---- Reduced motion ------------------------------------------------------ */
+
+.compyle-reduce-motion *,
+.compyle-reduce-motion *::before,
+.compyle-reduce-motion *::after {
+	transition-duration: 1ms !important;
+	animation-duration: 1ms !important;
+	scroll-behavior: auto !important;
+}
