@@ -21,8 +21,10 @@ import './compyleModeWelcome.js';
 import { openCompyleModeQuickPick } from './compyleModeQuickPick.js';
 import {
 	initProjectMemory,
-	ensureFlowMemory,
-	recordFlowAction,
+	ensureFlowMemoryForRoot,
+	recordFlowActionForRoot,
+	getWorkspaceRoot,
+	getProjectName,
 	openProjectMemory,
 	updateProjectMemory,
 	generateHandoff,
@@ -161,9 +163,13 @@ registerAction2(class extends Action2 {
 		});
 	}
 	override async run(accessor: ServicesAccessor): Promise<void> {
+		// Resolve every service synchronously up front: the accessor is only valid during
+		// the synchronous portion of run() and must not be used after the first await.
 		const modeService = accessor.get(ICompyleModeService);
 		const notificationService = accessor.get(INotificationService);
 		const contextService = accessor.get(IWorkspaceContextService);
+		const fileService = accessor.get(IFileService);
+		const configurationService = accessor.get(IConfigurationService);
 		const isEmpty = contextService.getWorkbenchState() === WorkbenchState.EMPTY;
 
 		if (isEmpty) {
@@ -175,17 +181,21 @@ registerAction2(class extends Action2 {
 			return;
 		}
 
-		// Start mode switch and memory init concurrently; all accessor usage is synchronous here
-		const switchP = modeService.switchMode('flow');
-		const memoryP = ensureFlowMemory(accessor, { source: 'Start Flow Workspace' })
-			.then(() => recordFlowAction(accessor, {
+		const root = getWorkspaceRoot(contextService);
+		const projectName = getProjectName(contextService);
+		const memoryEnabled = configurationService.getValue<boolean>('compyle.modes.memory.enabled') !== false;
+
+		await modeService.switchMode('flow');
+
+		if (root && memoryEnabled) {
+			await ensureFlowMemoryForRoot(fileService, root, projectName, { source: 'Start Flow Workspace' });
+			await recordFlowActionForRoot(fileService, root, projectName, {
 				title: 'Started Flow Workspace',
 				detail: 'Flow Mode is active and project memory is ready.',
 				status: 'active',
 				files: ['.compyle/PROJECT_MEMORY.md', '.compyle/CHANGELOG.md'],
-			}));
-
-		await Promise.all([switchP, memoryP]);
+			});
+		}
 
 		notificationService.notify({
 			severity: Severity.Info,
@@ -358,6 +368,7 @@ registerAction2(class extends Action2 {
 		const folders = contextService.getWorkspace().folders;
 		if (!folders.length) { return; }
 
+		const commandService = accessor.get(ICommandService);
 		const changelogUri = URI.joinPath(folders[0].uri, '.compyle', 'CHANGELOG.md');
 		const exists = await fileService.exists(changelogUri);
 
@@ -365,7 +376,7 @@ registerAction2(class extends Action2 {
 			notificationService.prompt(
 				Severity.Info,
 				'No CHANGELOG.md found. Initialize project memory first.',
-				[{ label: 'Initialize Memory', run: () => initProjectMemory(accessor) }],
+				[{ label: 'Initialize Memory', run: () => { void commandService.executeCommand('compyle.modes.initMemory'); } }],
 			);
 			return;
 		}
