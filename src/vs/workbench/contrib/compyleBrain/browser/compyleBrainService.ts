@@ -6,14 +6,15 @@
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
+import { listenStream } from '../../../../base/common/stream.js';
 import { localize } from '../../../../nls.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IRequestService, asJson } from '../../../../platform/request/common/request.js';
+import { IRequestService, asJson, asText, isSuccess } from '../../../../platform/request/common/request.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
-import { CompyleBrainProvider, CompyleBrainProviderConfig } from '../common/compyleBrain.js';
+import { CompyleBrainProvider, CompyleBrainProviderConfig, ILocalModelInfo } from '../common/compyleBrain.js';
 
 export const ICompyleBrainService = createDecorator<ICompyleBrainService>('compyleBrainService');
 
@@ -27,6 +28,13 @@ export interface ICompyleChatOptions {
 	readonly maxTokens?: number;
 	/** Skip the cloud-send confirmation (caller has already confirmed). */
 	readonly silent?: boolean;
+}
+
+/** Progress reported while downloading (pulling) a local model. */
+export interface ICompylePullProgress {
+	readonly status: string;
+	readonly completed?: number;
+	readonly total?: number;
 }
 
 export interface ICompyleBrainService {
@@ -45,6 +53,13 @@ export interface ICompyleBrainService {
 	chat(messages: ICompyleChatMessage[], options?: ICompyleChatOptions, token?: CancellationToken): Promise<string>;
 	/** Validate the configuration with a tiny round-trip. */
 	testConnection(): Promise<{ ok: boolean; message: string }>;
+
+	/** List models installed on the local server (Ollama /api/tags, LM Studio /v1/models). */
+	listLocalModels(token?: CancellationToken): Promise<ILocalModelInfo[]>;
+	/** Download (pull) a model into Ollama, reporting progress. Ollama only. */
+	pullLocalModel(name: string, onProgress: (progress: ICompylePullProgress) => void, token?: CancellationToken): Promise<void>;
+	/** Delete a model from Ollama. */
+	deleteLocalModel(name: string): Promise<void>;
 }
 
 const PROVIDER_DEFAULT_ENDPOINTS: Record<string, string> = {
@@ -85,6 +100,10 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			model: get<string>('model', '') || undefined,
 			localOnly: get<boolean>('localOnly', false),
 			confirmBeforeCloudSend: get<boolean>('confirmBeforeCloudSend', true),
+			temperature: get<number>('temperature', 0.7),
+			maxTokens: get<number>('maxTokens', 1024),
+			contextLength: get<number>('contextLength', 0),
+			keepAlive: get<string>('keepAlive', '5m'),
 		};
 	}
 
@@ -165,15 +184,20 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			}
 		}
 
-		return config.provider === CompyleBrainProvider.Anthropic
-			? this._chatAnthropic(config, apiKey, messages, options, token)
-			: this._chatOpenAICompatible(config, apiKey, messages, options, token);
+		if (config.provider === CompyleBrainProvider.Anthropic) {
+			return this._chatAnthropic(config, apiKey, messages, options, token);
+		}
+		if (config.provider === CompyleBrainProvider.Ollama) {
+			return this._chatOllama(config, messages, options, token);
+		}
+		return this._chatOpenAICompatible(config, apiKey, messages, options, token);
 	}
 
 	private async _chatAnthropic(config: CompyleBrainProviderConfig, apiKey: string | undefined, messages: ICompyleChatMessage[], options: ICompyleChatOptions, token: CancellationToken): Promise<string> {
 		const body = {
 			model: config.model,
-			max_tokens: options.maxTokens ?? 1024,
+			max_tokens: options.maxTokens ?? config.maxTokens ?? 1024,
+			temperature: config.temperature,
 			system: options.system,
 			messages: messages.map(m => ({ role: m.role, content: m.content })),
 		};
@@ -203,7 +227,8 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 		const body = {
 			model: config.model,
 			messages: fullMessages,
-			max_tokens: options.maxTokens ?? 1024,
+			max_tokens: options.maxTokens ?? config.maxTokens ?? 1024,
+			temperature: config.temperature,
 		};
 		const headers: Record<string, string> = { 'content-type': 'application/json' };
 		if (apiKey) {
@@ -222,6 +247,146 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			throw new Error(json.error.message ?? 'Request failed.');
 		}
 		return json?.choices?.[0]?.message?.content ?? '';
+	}
+
+	/** Native Ollama /api/chat so context length, keep-alive and sampling options apply. */
+	private async _chatOllama(config: CompyleBrainProviderConfig, messages: ICompyleChatMessage[], options: ICompyleChatOptions, token: CancellationToken): Promise<string> {
+		const fullMessages = options.system
+			? [{ role: 'system', content: options.system }, ...messages]
+			: messages.map(m => ({ role: m.role, content: m.content }));
+		const ollamaOptions: Record<string, number> = {
+			temperature: config.temperature,
+			num_predict: options.maxTokens ?? config.maxTokens ?? 1024,
+		};
+		if (config.contextLength > 0) {
+			ollamaOptions.num_ctx = config.contextLength;
+		}
+		const body = {
+			model: config.model,
+			messages: fullMessages,
+			stream: false,
+			keep_alive: config.keepAlive || '5m',
+			options: ollamaOptions,
+		};
+		const context = await this._requestService.request({
+			type: 'POST',
+			url: `${this._ollamaBase(config)}/api/chat`,
+			headers: { 'content-type': 'application/json' },
+			data: JSON.stringify(body),
+			callSite: 'compyleBrain.chat',
+		}, token);
+
+		const json = await asJson<{ message?: { content?: string }; error?: string }>(context);
+		if (json?.error) {
+			throw new Error(json.error);
+		}
+		return json?.message?.content ?? '';
+	}
+
+	/** Base URL for Ollama's native API, derived from the configured OpenAI-compatible endpoint. */
+	private _ollamaBase(config: CompyleBrainProviderConfig = this.getConfig()): string {
+		const endpoint = this._endpoint(config);
+		return endpoint.replace(/\/v1$/, '') || 'http://localhost:11434';
+	}
+
+	async listLocalModels(token: CancellationToken = CancellationToken.None): Promise<ILocalModelInfo[]> {
+		const config = this.getConfig();
+		if (config.provider === CompyleBrainProvider.Ollama) {
+			const context = await this._requestService.request({
+				type: 'GET',
+				url: `${this._ollamaBase(config)}/api/tags`,
+				callSite: 'compyleBrain.listModels',
+			}, token);
+			const json = await asJson<{ models?: Array<{ name?: string; size?: number; details?: { parameter_size?: string; quantization_level?: string; family?: string } }> }>(context);
+			return (json?.models ?? []).map(m => ({
+				name: m.name ?? '',
+				sizeBytes: m.size,
+				parameterSize: m.details?.parameter_size,
+				quantization: m.details?.quantization_level,
+				family: m.details?.family,
+			})).filter(m => m.name.length > 0);
+		}
+
+		// LM Studio / custom OpenAI-compatible: GET {endpoint}/models
+		const context = await this._requestService.request({
+			type: 'GET',
+			url: `${this._endpoint(config)}/models`,
+			callSite: 'compyleBrain.listModels',
+		}, token);
+		const json = await asJson<{ data?: Array<{ id?: string }> }>(context);
+		return (json?.data ?? []).map(m => ({ name: m.id ?? '' })).filter(m => m.name.length > 0);
+	}
+
+	async pullLocalModel(name: string, onProgress: (progress: ICompylePullProgress) => void, token: CancellationToken = CancellationToken.None): Promise<void> {
+		const context = await this._requestService.request({
+			type: 'POST',
+			url: `${this._ollamaBase()}/api/pull`,
+			headers: { 'content-type': 'application/json' },
+			data: JSON.stringify({ name, stream: true }),
+			callSite: 'compyleBrain.pullModel',
+		}, token);
+
+		if (!isSuccess(context)) {
+			const text = await asText(context);
+			throw new Error(text || `Server returned ${context.res.statusCode}`);
+		}
+
+		// Ollama streams newline-delimited JSON progress objects until the pull completes.
+		await new Promise<void>((resolve, reject) => {
+			const cancelListener = token.onCancellationRequested(() => resolve());
+			let buffer = '';
+			const handleLine = (line: string) => {
+				const trimmed = line.trim();
+				if (!trimmed) {
+					return;
+				}
+				try {
+					const obj = JSON.parse(trimmed) as { status?: string; completed?: number; total?: number; error?: string };
+					if (obj.error) {
+						reject(new Error(obj.error));
+						return;
+					}
+					onProgress({ status: obj.status ?? '', completed: obj.completed, total: obj.total });
+				} catch {
+					// Ignore partial / non-JSON lines.
+				}
+			};
+			listenStream(context.stream, {
+				onData: chunk => {
+					buffer += chunk.toString();
+					let newlineIndex: number;
+					while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+						handleLine(buffer.slice(0, newlineIndex));
+						buffer = buffer.slice(newlineIndex + 1);
+					}
+				},
+				onError: error => {
+					cancelListener.dispose();
+					reject(error);
+				},
+				onEnd: () => {
+					cancelListener.dispose();
+					if (buffer.length > 0) {
+						handleLine(buffer);
+					}
+					resolve();
+				},
+			}, token);
+		});
+	}
+
+	async deleteLocalModel(name: string): Promise<void> {
+		const context = await this._requestService.request({
+			type: 'DELETE',
+			url: `${this._ollamaBase()}/api/delete`,
+			headers: { 'content-type': 'application/json' },
+			data: JSON.stringify({ name }),
+			callSite: 'compyleBrain.deleteModel',
+		}, CancellationToken.None);
+		if (!isSuccess(context)) {
+			const text = await asText(context);
+			throw new Error(text || `Server returned ${context.res.statusCode}`);
+		}
 	}
 
 	async testConnection(): Promise<{ ok: boolean; message: string }> {
