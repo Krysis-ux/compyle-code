@@ -69,35 +69,50 @@
 }
 
 /* ---- Liquid Glass Full Mode --------------------------------------------- */
-/* The look: translucent "glass" chrome floating over a colourful orb backdrop.
+/* Real glassmorphism: a fixed, vivid multicolour background behind the WHOLE
+ * workbench, with every major surface turned into a light-frosted translucent
+ * sheet (rgba white + blur) so the colour shows through everywhere — including
+ * the editor, which keeps a dark scrim under the code for readability.
  *
- * Performance + correctness rules (learned the hard way):
- *  - backdrop-filter is applied ONLY to the docked chrome, which floats over the
- *    STATIC orb backdrop, so the blur is cached and cheap.
- *  - NEVER put backdrop-filter on the quick-input widget, lists, tabs, or the
- *    editor: it breaks list/quick-open positioning (blank results) and forces a
- *    per-frame GPU blur that tanks performance.
+ * Performance + correctness rules (do not break these):
+ *  - The colour background is FIXED and static, so every backdrop-filter blurs a
+ *    cached layer and stays cheap.
+ *  - NEVER put backdrop-filter on the quick-input widget, lists, or scrollables:
+ *    it breaks quick-open (blank list) and forces per-frame GPU blur.
+ *  - Blur is kept modest (~12px) — heavy blur is what made it slow.
  */
 
 .compyle-liquid-glass-full {
-	--compyle-glass-border: color-mix(in srgb, #ffffff 20%, transparent);
-	--compyle-glass-highlight: color-mix(in srgb, #ffffff 32%, transparent);
-	/* Surface tint: translucency is driven by the Studio "transparency" slider. */
-	--compyle-glass-tint: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) calc(var(--compyle-glass-opacity) * 100%), transparent);
-	--compyle-glass-blur: blur(20px) saturate(1.5);
+	/* Light frost (white-based), strength driven by the Studio "transparency" slider. */
+	--compyle-glass-frost: color-mix(in srgb, #ffffff calc(var(--compyle-glass-opacity) * 55%), transparent);
+	--compyle-glass-border: color-mix(in srgb, #ffffff 35%, transparent);
+	--compyle-glass-highlight: color-mix(in srgb, #ffffff 45%, transparent);
+	--compyle-glass-blur: blur(var(--compyle-blur)) saturate(1.3);
+	/* Dark scrim kept under editor text so code stays legible over the colour. */
+	--compyle-glass-scrim: color-mix(in srgb, #0b0c14 62%, transparent);
 }
 
-/* Colourful orb backdrop on the workbench. Static gradients => painted once, cheap. */
-.compyle-liquid-glass-full .monaco-workbench {
+/* Fixed vivid background behind everything (incl. the editor). Static => cheap. */
+.compyle-liquid-glass-full .monaco-workbench::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
 	background:
-		radial-gradient(58vw 70vh at 8% -5%, color-mix(in srgb, var(--compyle-accent) 62%, transparent), transparent 60%),
-		radial-gradient(52vw 60vh at 98% 10%, color-mix(in srgb, #59c4ff 50%, transparent), transparent 62%),
-		radial-gradient(60vw 60vh at 82% 104%, color-mix(in srgb, #ff6fc7 42%, transparent), transparent 62%),
-		radial-gradient(50vw 55vh at 14% 98%, color-mix(in srgb, #57f0bf 34%, transparent), transparent 60%),
-		linear-gradient(135deg, #0c0d16, #16142b 55%, #0c0d16) !important;
+		radial-gradient(50vw 60vh at 8% -5%, color-mix(in srgb, var(--compyle-accent) 85%, transparent), transparent 60%),
+		radial-gradient(45vw 55vh at 100% 8%, rgba(89, 196, 255, 0.75), transparent 60%),
+		radial-gradient(55vw 60vh at 85% 105%, rgba(255, 111, 199, 0.7), transparent 62%),
+		radial-gradient(48vw 52vh at 10% 100%, rgba(87, 240, 191, 0.6), transparent 60%),
+		linear-gradient(135deg, #0b0c14, #181433 55%, #0b0c14);
 }
 
-/* Glass chrome: translucent + blurred, showing the orbs through. Rounded, light edges. */
+/* Workbench itself is transparent so the fixed background shows through. */
+.compyle-liquid-glass-full .monaco-workbench {
+	background: transparent !important;
+}
+
+/* Every major chrome surface = light-frosted glass. */
 .compyle-liquid-glass-full .monaco-workbench .part.activitybar,
 .compyle-liquid-glass-full .monaco-workbench .part.sidebar,
 .compyle-liquid-glass-full .monaco-workbench .part.panel,
@@ -108,20 +123,34 @@
 .compyle-liquid-glass-full .monaco-workbench .editor-group-container > .title,
 .compyle-liquid-glass-full .compyle-panel,
 .compyle-liquid-glass-full .compyle-card {
-	background-color: var(--compyle-glass-tint) !important;
+	background-color: var(--compyle-glass-frost) !important;
 	backdrop-filter: var(--compyle-glass-blur);
 	border-color: var(--compyle-glass-border) !important;
-	box-shadow: inset 0 1px 0 var(--compyle-glass-highlight);
+	box-shadow: inset 0 1px 0 var(--compyle-glass-highlight), 0 8px 32px rgba(10, 12, 30, 0.18);
 }
 
-/* Tabs: translucent, no blur (they repaint on switch). */
+/* The editor goes glass too: a dark scrim over the colourful background keeps code
+ * readable, with a single low blur on the editor part (one big surface, static bg). */
+.compyle-liquid-glass-full .monaco-workbench .part.editor,
+.compyle-liquid-glass-full .editor-group-container > .editor-container,
+.compyle-liquid-glass-full .monaco-editor,
+.compyle-liquid-glass-full .monaco-editor-background,
+.compyle-liquid-glass-full .monaco-editor .margin {
+	background-color: var(--compyle-glass-scrim) !important;
+}
+
+.compyle-liquid-glass-full .monaco-workbench .part.editor {
+	backdrop-filter: blur(10px);
+}
+
+/* Tabs: transparent inactive; active gets a light frost + accent underline (no blur). */
 .compyle-liquid-glass-full .monaco-workbench .tabs-container > .tab {
 	background-color: transparent !important;
 	border-right-color: var(--compyle-glass-border) !important;
 }
 
 .compyle-liquid-glass-full .monaco-workbench .tabs-container > .tab.active {
-	background-color: color-mix(in srgb, #ffffff 12%, transparent) !important;
+	background-color: color-mix(in srgb, #ffffff 14%, transparent) !important;
 	box-shadow: inset 0 -2px 0 var(--compyle-accent), inset 0 1px 0 var(--compyle-glass-highlight);
 }
 
@@ -130,19 +159,18 @@
 .compyle-liquid-glass-full .monaco-workbench .monaco-list .monaco-list-row.focused,
 .compyle-liquid-glass-full .monaco-workbench .monaco-list .monaco-list-row.selected,
 .compyle-liquid-glass-full .compyle-card.selected {
-	background-color: color-mix(in srgb, var(--compyle-accent) 24%, transparent) !important;
+	background-color: color-mix(in srgb, var(--compyle-accent) 26%, transparent) !important;
 }
 
-/* Floating widgets: translucent glass frame, but NO backdrop-filter (keeps the
- * quick-open list working and avoids the blur cost). They sit over the opaque
- * editor, so a near-opaque tint keeps the list readable. */
+/* Floating widgets: near-opaque frosted tint, NO backdrop-filter (keeps quick-open
+ * working and cheap). A higher opacity here keeps their lists readable. */
 .compyle-liquid-glass-full .quick-input-widget,
 .compyle-liquid-glass-full .editor-widget.suggest-widget,
 .compyle-liquid-glass-full .monaco-hover,
 .compyle-liquid-glass-full .monaco-editor .find-widget,
 .compyle-liquid-glass-full .notifications-toasts .notification-toast,
 .compyle-liquid-glass-full .monaco-menu-container {
-	background-color: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) 92%, transparent) !important;
+	background-color: color-mix(in srgb, #11121f 88%, transparent) !important;
 	border: 1px solid var(--compyle-glass-border);
 	box-shadow: inset 0 1px 0 var(--compyle-glass-highlight), var(--compyle-shadow);
 	backdrop-filter: none !important;
@@ -151,11 +179,10 @@
 /* Hard guarantee: never blur dense / scrolling content. Protects performance and
  * keeps the quick-open and tree lists rendering correctly. */
 .compyle-liquid-glass-full .quick-input-widget,
-.compyle-liquid-glass-full .monaco-workbench .part.editor,
-.compyle-liquid-glass-full .monaco-editor,
 .compyle-liquid-glass-full .monaco-list,
 .compyle-liquid-glass-full .monaco-list-rows,
 .compyle-liquid-glass-full .monaco-scrollable-element,
+.compyle-liquid-glass-full .minimap,
 .compyle-liquid-glass-full .xterm,
 .compyle-liquid-glass-full .notebookOverlay,
 .compyle-liquid-glass-full .notebook-editor,

@@ -35,7 +35,7 @@ const LIQUID_GLASS: ICompyleUIPack = {
 	description: 'Apple-like glass interface. Translucent panels, blurred backdrops, soft highlights, and smooth rounded surfaces with gentle depth.',
 	badges: [CompyleUIPackBadge.Glass, CompyleUIPackBadge.PerformanceHeavy],
 	colorThemeId: 'Compyle Dark',
-	tokens: { accent: '#7E81FF', radius: 12, blur: 22, shadow: 2, glass: true, transparency: 0.64, density: 'comfortable', animation: 'normal' },
+	tokens: { accent: '#7E81FF', radius: 12, blur: 12, shadow: 2, glass: true, transparency: 0.22, density: 'comfortable', animation: 'normal' },
 };
 
 const AURORA_GLASS: ICompyleUIPack = {
@@ -46,7 +46,7 @@ const AURORA_GLASS: ICompyleUIPack = {
 	description: 'Glass surfaces with soft aurora accents and depth. Colorful but still polished and professional.',
 	badges: [CompyleUIPackBadge.Glass, CompyleUIPackBadge.PerformanceHeavy],
 	colorThemeId: 'Tokyo Night',
-	tokens: { accent: '#5AD1C8', radius: 14, blur: 30, shadow: 2, glass: true, transparency: 0.68, density: 'comfortable', animation: 'normal' },
+	tokens: { accent: '#5AD1C8', radius: 14, blur: 12, shadow: 2, glass: true, transparency: 0.22, density: 'comfortable', animation: 'normal' },
 };
 
 const DARK_PRO: ICompyleUIPack = {

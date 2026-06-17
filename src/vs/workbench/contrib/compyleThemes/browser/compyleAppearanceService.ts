@@ -150,6 +150,15 @@ export class CompyleAppearanceService extends Disposable implements ICompyleAppe
 
 	async setLiquidGlassFullMode(enabled: boolean): Promise<void> {
 		await this._configurationService.updateValue(COMPYLE_LIQUID_GLASS_FULL_MODE_SETTING, enabled);
+		if (enabled) {
+			// Drop any stale blur/transparency/glass fine-tuning so the pack's glass defaults
+			// actually take effect (otherwise an old saved blur can fight the new look).
+			const customizations = { ...this.getCustomizations() };
+			delete customizations.blur;
+			delete customizations.transparency;
+			delete customizations.glass;
+			await this._configurationService.updateValue(COMPYLE_CUSTOMIZATIONS_SETTING, customizations);
+		}
 		this._applyAll();
 	}
 
