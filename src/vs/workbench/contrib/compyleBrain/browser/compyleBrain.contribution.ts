@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
+import { localize, localize2 } from '../../../../nls.js';
+import { Codicon } from '../../../../base/common/codicons.js';
 import { Action2, registerAction2, MenuId } from '../../../../platform/actions/common/actions.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
@@ -12,16 +13,21 @@ import { IQuickInputService } from '../../../../platform/quickinput/common/quick
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
+import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { IConfigurationRegistry, Extensions as ConfigurationExtensions, ConfigurationScope } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { EditorPaneDescriptor, IEditorPaneRegistry } from '../../../browser/editor.js';
 import { EditorExtensions, IEditorFactoryRegistry } from '../../../common/editor.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IViewsService } from '../../../services/views/common/viewsService.js';
+import { IViewContainersRegistry, IViewsRegistry, IViewDescriptor, ViewContainer, ViewContainerLocation, Extensions as ViewExtensions } from '../../../common/views.js';
+import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContainer.js';
 import { COMPYLE_BRAIN_COMMANDS, CompyleBrainProvider } from '../common/compyleBrain.js';
 import { ICompyleBrainService } from './compyleBrainService.js';
 import { CompyleLocalModelsEditor } from './compyleLocalModels.js';
 import { CompyleLocalModelsInput, CompyleLocalModelsInputSerializer } from './compyleLocalModelsInput.js';
 import { CompyleChatEditor } from './compyleChat.js';
 import { CompyleChatInput, CompyleChatInputSerializer } from './compyleChatInput.js';
+import { CompyleChatViewPane } from './compyleChatViewPane.js';
 
 // ---------------------------------------------------------------------------
 // Settings registration
@@ -155,6 +161,35 @@ Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
 	.registerEditorSerializer(CompyleChatInput.ID, CompyleChatInputSerializer);
 
 // ---------------------------------------------------------------------------
+// Compyle AI view — lives in the auxiliary bar (right side panel), like Copilot
+// ---------------------------------------------------------------------------
+
+const COMPYLE_CHAT_CONTAINER_ID = 'workbench.viewContainer.compyleChat';
+const compyleChatIcon = registerIcon('compyle-chat-icon', Codicon.robot, localize('compyleChat.viewIcon', "Icon for the Compyle AI view."));
+
+const compyleChatViewContainer: ViewContainer = Registry.as<IViewContainersRegistry>(ViewExtensions.ViewContainersRegistry).registerViewContainer({
+	id: COMPYLE_CHAT_CONTAINER_ID,
+	title: localize2('compyleChat.viewContainer', "Compyle AI"),
+	icon: compyleChatIcon,
+	ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [COMPYLE_CHAT_CONTAINER_ID, { mergeViewWithContainerWhenSingleView: true }]),
+	storageId: COMPYLE_CHAT_CONTAINER_ID,
+	hideIfEmpty: false,
+	order: 2,
+}, ViewContainerLocation.AuxiliaryBar, { doNotRegisterOpenCommand: true });
+
+const compyleChatViewDescriptor: IViewDescriptor = {
+	id: CompyleChatViewPane.ID,
+	name: localize2('compyleChat.viewName', "Compyle AI"),
+	containerIcon: compyleChatViewContainer.icon,
+	containerTitle: compyleChatViewContainer.title.value,
+	singleViewPaneContainerTitle: compyleChatViewContainer.title.value,
+	canToggleVisibility: true,
+	canMoveView: true,
+	ctorDescriptor: new SyncDescriptor(CompyleChatViewPane),
+};
+Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews([compyleChatViewDescriptor], compyleChatViewContainer);
+
+// ---------------------------------------------------------------------------
 // Command registrations
 // ---------------------------------------------------------------------------
 
@@ -162,7 +197,7 @@ class OpenCompyleBrainAction extends Action2 {
 	constructor() {
 		super({
 			id: COMPYLE_BRAIN_COMMANDS.open,
-			title: { value: localize('compyle.brain.open', "Open Compyle Brain"), original: 'Open Compyle Brain' },
+			title: { value: localize('compyle.brain.open', "Open Compyle AI"), original: 'Open Compyle AI' },
 			category: { value: localize('compyle', "Compyle"), original: 'Compyle' },
 			f1: true,
 			menu: [{ id: MenuId.CommandPalette }],
@@ -170,10 +205,37 @@ class OpenCompyleBrainAction extends Action2 {
 	}
 
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const editorService = accessor.get(IEditorService);
-		const instantiationService = accessor.get(IInstantiationService);
-		const input = instantiationService.createInstance(CompyleChatInput);
-		await editorService.openEditor(input, { pinned: false });
+		const viewsService = accessor.get(IViewsService);
+		await viewsService.openView(CompyleChatViewPane.ID, true);
+	}
+}
+
+/**
+ * Title-bar toggle button (top-right, in the layout control cluster) that opens
+ * or closes the Compyle AI panel on the right — the same gesture as Copilot.
+ */
+class ToggleCompyleChatViewAction extends Action2 {
+	constructor() {
+		super({
+			id: 'compyle.brain.toggleView',
+			title: localize2('compyle.brain.toggleView', "Compyle AI"),
+			category: { value: localize('compyle', "Compyle"), original: 'Compyle' },
+			icon: Codicon.robot,
+			f1: true,
+			menu: [
+				{ id: MenuId.LayoutControlMenu, group: 'navigation', order: 0 },
+				{ id: MenuId.CommandPalette },
+			],
+		});
+	}
+
+	override async run(accessor: ServicesAccessor): Promise<void> {
+		const viewsService = accessor.get(IViewsService);
+		if (viewsService.isViewVisible(CompyleChatViewPane.ID)) {
+			viewsService.closeView(CompyleChatViewPane.ID);
+		} else {
+			await viewsService.openView(CompyleChatViewPane.ID, true);
+		}
 	}
 }
 
@@ -423,6 +485,7 @@ class AskCompyleBrainAction extends Action2 {
 }
 
 registerAction2(OpenCompyleBrainAction);
+registerAction2(ToggleCompyleChatViewAction);
 registerAction2(OpenLocalModelsAction);
 registerAction2(GenerateProjectMemoryAction);
 registerAction2(ExplainCodebaseAction);

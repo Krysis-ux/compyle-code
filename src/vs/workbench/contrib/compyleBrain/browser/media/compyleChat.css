@@ -3,6 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+.cpc-host,
+.cpc-view-host {
+	height: 100%;
+}
+
 .cpc-root {
 	display: flex;
 	flex-direction: column;
@@ -113,6 +118,72 @@
 	background: currentColor;
 }
 
+/* ---- Project context awareness ---------------------------------------- */
+
+.cpc-context-info {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 5px 16px;
+	font-size: 11.5px;
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 7%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
+}
+
+.cpc-context-info.off {
+	background: transparent;
+}
+
+.cpc-context-info-text {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	opacity: 0.85;
+}
+
+.cpc-context-info-text .codicon {
+	font-size: 13px;
+	color: var(--compyle-accent, var(--vscode-focusBorder));
+}
+
+.cpc-context-info-text span:last-child {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cpc-context-info-toggle {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	height: 22px;
+	padding: 0 9px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 16%, transparent);
+	background: transparent;
+	color: var(--vscode-foreground);
+	font-size: 11px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.cpc-context-info-toggle .codicon {
+	font-size: 12px;
+}
+
+.cpc-context-info-toggle.active {
+	border-color: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 50%, transparent);
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 14%, transparent);
+}
+
+.cpc-context-info-toggle:hover {
+	background: color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
+}
+
 /* ---- Start Ollama banner ---------------------------------------------- */
 
 .cpc-ollama-banner {
@@ -159,14 +230,19 @@
 }
 
 .cpc-context-chip-remove {
+	display: inline-flex;
+	align-items: center;
 	cursor: pointer;
 	opacity: 0.6;
-	font-size: 13px;
 	line-height: 1;
 	border: none;
 	background: none;
 	color: inherit;
 	padding: 0;
+}
+
+.cpc-context-chip-remove .codicon {
+	font-size: 12px;
 }
 
 .cpc-context-chip-remove:hover {
