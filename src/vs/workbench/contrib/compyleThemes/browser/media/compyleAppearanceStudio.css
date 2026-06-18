@@ -1,0 +1,204 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.cas-root {
+	height: 100%;
+	overflow: auto;
+	padding: 28px 32px 48px;
+	box-sizing: border-box;
+}
+
+.cas-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 24px;
+}
+
+.cas-title {
+	margin: 0 0 4px;
+	font-size: 22px;
+	font-weight: 600;
+}
+
+.cas-subtitle {
+	color: var(--vscode-descriptionForeground);
+	font-size: 13px;
+}
+
+.cas-reset {
+	flex: 0 0 auto;
+	padding: 6px 14px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 6px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.cas-reset:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.cas-section {
+	margin: 28px 0 12px;
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* ---- Cards ---------------------------------------------------------------- */
+
+.cas-modes {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.cas-styles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 12px;
+}
+
+.cas-card {
+	border: 1px solid var(--vscode-widget-border, var(--vscode-editorWidget-border, transparent));
+	border-radius: 10px;
+	background: var(--vscode-editorWidget-background);
+	cursor: pointer;
+	overflow: hidden;
+	transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.cas-card:hover {
+	transform: translateY(-2px);
+}
+
+.cas-card.active {
+	border-color: var(--vscode-focusBorder);
+	box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.cas-info {
+	padding: 12px 14px;
+}
+
+.cas-name {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cas-tagline {
+	margin-top: 2px;
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* ---- Mode preview thumbnails --------------------------------------------- */
+
+.cas-preview {
+	position: relative;
+	height: 120px;
+	display: grid;
+	grid-template-columns: 14px 56px 1fr;
+	gap: 0;
+	background: linear-gradient(160deg, #1c1d28, #0f1018);
+}
+
+.cas-pv-bar { background: rgba(255, 255, 255, 0.08); }
+.cas-pv-side { background: rgba(255, 255, 255, 0.05); }
+.cas-pv-editor { background: rgba(0, 0, 0, 0.25); }
+
+.cas-preview-vibrancy {
+	background:
+		radial-gradient(60% 70% at 10% 0%, color-mix(in srgb, var(--compyle-tint, #7E81FF) 45%, transparent), transparent 60%),
+		linear-gradient(160deg, #1c1d28, #0f1018);
+}
+
+.cas-preview-vibrancy .cas-pv-bar,
+.cas-preview-vibrancy .cas-pv-side {
+	background: rgba(255, 255, 255, 0.12);
+	backdrop-filter: blur(6px);
+}
+
+/* ---- Style swatches ------------------------------------------------------- */
+
+.cas-style-card {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+}
+
+.cas-style-card .cas-info {
+	padding: 0;
+}
+
+.cas-swatch {
+	flex: 0 0 auto;
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.cas-swatch-frost { background: color-mix(in srgb, var(--compyle-tint, #7E81FF) 14%, rgba(255, 255, 255, 0.5)); }
+.cas-swatch-acrylic { background: color-mix(in srgb, var(--compyle-tint, #7E81FF) 55%, rgba(255, 255, 255, 0.25)); }
+.cas-swatch-mica { background: color-mix(in srgb, var(--compyle-tint, #7E81FF) 8%, #2a2b36); }
+.cas-swatch-tint { background: color-mix(in srgb, var(--compyle-tint, #7E81FF) 70%, transparent); }
+
+/* ---- Tune rows ------------------------------------------------------------ */
+
+.cas-tune,
+.cas-misc {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	max-width: 520px;
+}
+
+.cas-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.cas-label {
+	font-size: 13px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cas-value {
+	color: var(--vscode-descriptionForeground);
+	font-variant-numeric: tabular-nums;
+	font-size: 12px;
+}
+
+.cas-range {
+	flex: 1 1 240px;
+	max-width: 300px;
+	accent-color: var(--vscode-focusBorder);
+}
+
+.cas-color {
+	width: 44px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 6px;
+	background: none;
+	cursor: pointer;
+}
+
+.cas-check {
+	cursor: pointer;
+}

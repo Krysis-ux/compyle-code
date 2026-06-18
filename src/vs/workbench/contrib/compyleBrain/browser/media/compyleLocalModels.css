@@ -502,3 +502,30 @@
 	opacity: 0.8;
 	min-width: 64px;
 }
+
+.clm-size-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0 12px;
+}
+
+.clm-size-chip {
+	padding: 4px 10px;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+	font-size: 11px;
+}
+
+.clm-size-chip:hover {
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.clm-size-chip.active {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}

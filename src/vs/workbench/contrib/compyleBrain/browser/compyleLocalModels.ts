@@ -7,6 +7,9 @@ import './media/compyleLocalModels.css';
 import { $, append, clearNode, addDisposableListener, Dimension } from '../../../../base/browser/dom.js';
 import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
+import { timeout } from '../../../../base/common/async.js';
+import { joinPath, dirname } from '../../../../base/common/resources.js';
+import { VSBuffer } from '../../../../base/common/buffer.js';
 import { localize } from '../../../../nls.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
@@ -15,12 +18,18 @@ import { IProgressService, ProgressLocation } from '../../../../platform/progres
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { EditorPane } from '../../../browser/parts/editor/editorPane.js';
 import { IEditorOpenContext } from '../../../common/editor.js';
 import { IEditorGroup } from '../../../services/editor/common/editorGroupsService.js';
+import { ITerminalService, ITerminalGroupService } from '../../terminal/browser/terminal.js';
 import { CompyleBrainProvider, ILocalModelInfo, OLLAMA_CATALOG } from '../common/compyleBrain.js';
 import { ICompyleBrainService } from './compyleBrainService.js';
 import { CompyleLocalModelsInput } from './compyleLocalModelsInput.js';
+
+type CatalogSizeFilter = 'all' | 'small' | 'medium' | 'large';
 
 interface ILocalProviderCard {
 	readonly provider: CompyleBrainProvider;
@@ -55,6 +64,8 @@ export class CompyleLocalModelsEditor extends EditorPane {
 	private _loadingModels = false;
 	private _modelsError: string | undefined;
 	private _catalogFilter = '';
+	private _sizeFilter: CatalogSizeFilter = 'all';
+	private _startingOllama = false;
 	private readonly _downloads = new Map<string, { percent: number; status: string }>();
 	private readonly _downloadEls = new Map<string, { bar: HTMLElement; label: HTMLElement }>();
 	private _pullCts: CancellationTokenSource | undefined;
@@ -70,6 +81,11 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
 		@IProgressService private readonly _progressService: IProgressService,
 		@INotificationService private readonly _notificationService: INotificationService,
+		@ITerminalService private readonly _terminalService: ITerminalService,
+		@ITerminalGroupService private readonly _terminalGroupService: ITerminalGroupService,
+		@IQuickInputService private readonly _quickInputService: IQuickInputService,
+		@IFileService private readonly _fileService: IFileService,
+		@IFileDialogService private readonly _fileDialogService: IFileDialogService,
 	) {
 		super(CompyleLocalModelsEditor.ID, group, telemetryService, themeService, storageService);
 	}
@@ -95,6 +111,93 @@ export class CompyleLocalModelsEditor extends EditorPane {
 			this._loadingModels = false;
 			this._render();
 		}
+	}
+
+	/** Launch `ollama serve` in a terminal, then poll until the server answers. */
+	private async _startOllama(): Promise<void> {
+		if (this._startingOllama) {
+			return;
+		}
+		this._startingOllama = true;
+		this._render();
+		try {
+			const instance = await this._terminalService.createTerminal({});
+			this._terminalService.setActiveInstance(instance);
+			await this._terminalGroupService.showPanel(true);
+			await instance.sendText('ollama serve', true);
+
+			for (let i = 0; i < 12; i++) {
+				await timeout(1000);
+				try {
+					this._installed = await this._brainService.listLocalModels();
+					this._modelsError = undefined;
+					this._notificationService.info(localize("compyleLocalModels.ollamaUp", "Ollama is running."));
+					return;
+				} catch {
+					// Not up yet — keep polling.
+				}
+			}
+			this._notificationService.notify({
+				severity: Severity.Warning,
+				message: localize("compyleLocalModels.ollamaSlow", "Started Ollama, but it is not responding yet. Click Refresh Models in a moment."),
+			});
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
+		} finally {
+			this._startingOllama = false;
+			this._render();
+		}
+	}
+
+	/** Import a local .gguf file into Ollama via a generated Modelfile. */
+	private async _importGguf(): Promise<void> {
+		const picked = await this._fileDialogService.showOpenDialog({
+			canSelectFiles: true,
+			canSelectMany: false,
+			title: localize("compyleLocalModels.importTitle", "Select a .gguf model file"),
+			filters: [{ name: 'GGUF', extensions: ['gguf'] }],
+		});
+		if (!picked || picked.length === 0) {
+			return;
+		}
+		const gguf = picked[0];
+		const name = await this._quickInputService.input({
+			prompt: localize("compyleLocalModels.importName", "Name for the imported model"),
+			placeHolder: 'my-model',
+		});
+		if (!name) {
+			return;
+		}
+		const modelfile = joinPath(dirname(gguf), `${name}.Modelfile`);
+		try {
+			await this._fileService.writeFile(modelfile, VSBuffer.fromString(`FROM ${gguf.fsPath}\n`));
+			const instance = await this._terminalService.createTerminal({ cwd: dirname(gguf) });
+			this._terminalService.setActiveInstance(instance);
+			await this._terminalGroupService.showPanel(true);
+			await instance.sendText(`ollama create ${name} -f "${modelfile.fsPath}"`, true);
+			this._notificationService.info(localize("compyleLocalModels.importing", "Importing {0} into Ollama. Click Refresh Models when it finishes.", name));
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private _sizeGb(size: string): number {
+		const match = size.match(/([\d.]+)\s*GB/i);
+		return match ? parseFloat(match[1]) : 0;
+	}
+
+	private _matchesSizeFilter(size: string): boolean {
+		if (this._sizeFilter === 'all') {
+			return true;
+		}
+		const gb = this._sizeGb(size);
+		if (this._sizeFilter === 'small') {
+			return gb > 0 && gb < 3;
+		}
+		if (this._sizeFilter === 'medium') {
+			return gb >= 3 && gb <= 8;
+		}
+		return gb > 8;
 	}
 
 	private async _switchProvider(card: ILocalProviderCard): Promise<void> {
@@ -257,9 +360,19 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		if (this._modelsError) {
 			const state = this._classifyFailure(this._modelsError);
 			const message = state === 'not-running'
-				? localize("compyleLocalModels.notRunningHint", "Could not reach the local server. Start it (for Ollama, run \"ollama serve\") and click Refresh Models.")
+				? localize("compyleLocalModels.notRunningHint", "Could not reach the local server. Start it and click Refresh Models.")
 				: this._modelsError;
 			append(section, $('.clm-empty.error', undefined, message));
+			// One-click start for Ollama when the server is down.
+			if (state === 'not-running' && this._brainService.getConfig().provider === CompyleBrainProvider.Ollama) {
+				const actions = append(section, $('.clm-actions'));
+				const startBtn = append(actions, $('button.clm-btn.primary', undefined,
+					this._startingOllama
+						? localize("compyleLocalModels.starting", "Starting…")
+						: localize("compyleLocalModels.startOllama", "Start Ollama"))) as HTMLButtonElement;
+				startBtn.disabled = this._startingOllama;
+				this._disposables.add(addDisposableListener(startBtn, 'click', () => void this._startOllama()));
+			}
 			return;
 		}
 		if (this._installed.length === 0) {
@@ -297,10 +410,30 @@ export class CompyleLocalModelsEditor extends EditorPane {
 
 		const filter = append(section, $('input.clm-input.clm-filter')) as HTMLInputElement;
 		filter.type = 'text';
-		filter.placeholder = localize("compyleLocalModels.filterPlaceholder", "Filter models…");
+		filter.placeholder = localize("compyleLocalModels.filterPlaceholder", "Search models by name or description…");
 		filter.value = this._catalogFilter;
 
+		// Size buckets so users can match models to their hardware.
+		const sizeRow = append(section, $('.clm-size-filters'));
+		const sizeOptions: { id: CatalogSizeFilter; label: string }[] = [
+			{ id: 'all', label: localize("compyleLocalModels.size.all", "All sizes") },
+			{ id: 'small', label: localize("compyleLocalModels.size.small", "< 3 GB") },
+			{ id: 'medium', label: localize("compyleLocalModels.size.medium", "3–8 GB") },
+			{ id: 'large', label: localize("compyleLocalModels.size.large", "> 8 GB") },
+		];
+
 		const listEl = append(section, $('.clm-catalog'));
+		for (const option of sizeOptions) {
+			const chip = append(sizeRow, $(`button.clm-size-chip${option.id === this._sizeFilter ? '.active' : ''}`, undefined, option.label)) as HTMLButtonElement;
+			this._disposables.add(addDisposableListener(chip, 'click', () => {
+				this._sizeFilter = option.id;
+				for (const sibling of Array.from(sizeRow.children)) {
+					sibling.classList.toggle('active', sibling === chip);
+				}
+				this._renderCatalogList(listEl);
+			}));
+		}
+
 		this._renderCatalogList(listEl);
 		this._disposables.add(addDisposableListener(filter, 'input', () => {
 			this._catalogFilter = filter.value;
@@ -321,6 +454,12 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		this._disposables.add(addDisposableListener(pullInput, 'keydown', e => {
 			if ((e as KeyboardEvent).key === 'Enter') { startPull(); }
 		}));
+
+		// Import a local .gguf file into Ollama.
+		const importRow = append(section, $('.clm-pull-row'));
+		append(importRow, $('.clm-section-hint', undefined, localize("compyleLocalModels.importHint", "Have a model file already? Import a .gguf into Ollama.")));
+		const importBtn = append(importRow, $('button.clm-btn', undefined, localize("compyleLocalModels.importGguf", "Import .gguf…"))) as HTMLButtonElement;
+		this._disposables.add(addDisposableListener(importBtn, 'click', () => void this._importGguf()));
 	}
 
 	private _renderCatalogList(container: HTMLElement): void {
@@ -328,10 +467,11 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		const installedNames = new Set(this._installed.map(m => m.name));
 		const filter = this._catalogFilter.trim().toLowerCase();
 		const entries = OLLAMA_CATALOG.filter(entry =>
-			!filter
-			|| entry.name.toLowerCase().includes(filter)
-			|| entry.label.toLowerCase().includes(filter)
-			|| entry.description.toLowerCase().includes(filter));
+			this._matchesSizeFilter(entry.size)
+			&& (!filter
+				|| entry.name.toLowerCase().includes(filter)
+				|| entry.label.toLowerCase().includes(filter)
+				|| entry.description.toLowerCase().includes(filter)));
 
 		if (entries.length === 0) {
 			append(container, $('.clm-empty', undefined, localize("compyleLocalModels.noMatches", "No catalog models match \"{0}\". Use the field below to pull it by exact name.", this._catalogFilter)));

@@ -472,8 +472,18 @@ import './contrib/opener/browser/opener.contribution.js';
 import './contrib/compyleModes/browser/compyleModeService.js';
 import './contrib/compyleModes/browser/compyleModes.contribution.js';
 
+// Compyle Router (model routing + quality gate)
+import './contrib/compyleRouter/browser/compyleRouter.contribution.js';
+
+// Compyle Skill Studio
+import './contrib/compyleSkillStudio/browser/compyleSkillStudio.contribution.js';
+
+// Compyle Converter (file conversion)
+import './contrib/compyleConverter/browser/compyleConverter.contribution.js';
+
 // Compyle Brain (AI)
 import './contrib/compyleBrain/browser/compyleBrain.contribution.js';
+import './contrib/compyleBrain/browser/compyleAgentMode.contribution.js';
 
 // Compyle Sounds
 import './contrib/compyleSounds/browser/compyleSounds.contribution.js';

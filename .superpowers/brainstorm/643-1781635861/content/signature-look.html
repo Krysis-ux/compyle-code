@@ -1,0 +1,106 @@
+<h2>Compyle's signature look — pick a direction</h2>
+<p class="subtitle">Same features, same layout. The difference is the design language applied to the WHOLE workbench. Click the one that feels like "premium Compyle."</p>
+
+<style>
+  .wb { width: 100%; height: 188px; border-radius: 10px; overflow: hidden; display: grid;
+        grid-template-columns: 44px 150px 1fr; grid-template-rows: 1fr 22px; font-family: ui-sans-serif, system-ui; }
+  .wb .act { grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 14px; }
+  .wb .act i { width: 18px; height: 18px; border-radius: 5px; }
+  .wb .side { padding: 12px 12px; }
+  .wb .side .h { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; opacity: .5; margin-bottom: 10px; }
+  .wb .side .row { height: 8px; border-radius: 4px; margin-bottom: 9px; opacity: .8; }
+  .wb .ed { padding: 14px 16px; }
+  .wb .ed .ln { height: 7px; border-radius: 4px; margin-bottom: 9px; }
+  .wb .stat { grid-column: 1 / span 3; display: flex; align-items: center; padding: 0 12px; font-size: 9px; gap: 10px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* A — QUIET */
+  .a { background: #0e0e10; color: #e7e7ea; }
+  .a .act { background: #0e0e10; }
+  .a .act i { background: #232327; }
+  .a .act i.on { background: #E8A33D; }
+  .a .side { background: #0e0e10; }
+  .a .side .row { background: #1c1c20; }
+  .a .ed { background: #0e0e10; }
+  .a .ed .ln { background: #1c1c20; }
+  .a .ed .ln.k { background: #E8A33D; opacity:.85; width: 42%; }
+  .a .ed .ln.s { background: #2b2b30; width: 70%; }
+  .a .stat { background: #0e0e10; color:#6b6b72; border-top: 1px solid #18181b; }
+
+  /* B — GLASS */
+  .b { background: radial-gradient(120% 140% at 0% 0%, #2a2350 0%, #11121c 55%, #0c0d14 100%); color:#eef0ff; }
+  .b .act { background: rgba(255,255,255,.03); backdrop-filter: blur(8px); }
+  .b .act i { background: rgba(255,255,255,.12); border-radius: 7px; }
+  .b .act i.on { background: linear-gradient(135deg,#8b8bff,#6a6aff); box-shadow: 0 0 10px #7d7dff88; }
+  .b .side { background: rgba(255,255,255,.05); backdrop-filter: blur(14px); margin: 8px 0 8px 6px; border-radius: 12px; }
+  .b .side .row { background: rgba(255,255,255,.14); }
+  .b .ed { background: transparent; }
+  .b .ed .ln { background: rgba(255,255,255,.10); }
+  .b .ed .ln.k { background: #9a9aff; width: 42%; }
+  .b .ed .ln.s { background: rgba(255,255,255,.2); width: 70%; }
+  .b .stat { background: rgba(255,255,255,.04); color:#aeb2d8; }
+
+  /* C — EDITORIAL */
+  .c { background: #0a0a0c; color:#f2f2f4; }
+  .c .act { background: #0a0a0c; border-right: 1px solid #1a1a1f; }
+  .c .act i { background: #1f1f25; border-radius: 6px; }
+  .c .act i.on { background: #635BFF; }
+  .c .side { background: #0c0c0f; border-right: 1px solid #1a1a1f; }
+  .c .side .row { background: #1d1d23; border-radius: 5px; }
+  .c .ed { background: #0a0a0c; }
+  .c .ed .ln { background: #1a1a20; border-radius:5px; }
+  .c .ed .ln.k { background: #8b85ff; width: 42%; }
+  .c .ed .ln.s { background: #2a2a33; width: 70%; }
+  .c .stat { background: #0c0c0f; color:#7a7a85; border-top: 1px solid #1a1a1f; }
+</style>
+
+<div class="cards">
+
+  <div class="card" data-choice="quiet" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:10px;background:#161618;">
+      <div class="wb a">
+        <div class="act"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="side"><div class="h">Explorer</div><div class="row" style="width:80%"></div><div class="row" style="width:60%"></div><div class="row" style="width:72%"></div><div class="row" style="width:50%"></div></div>
+        <div class="ed"><div class="ln k"></div><div class="ln s"></div><div class="ln" style="width:55%"></div><div class="ln" style="width:64%"></div><div class="ln s"></div></div>
+        <div class="stat"><span class="dot" style="background:#E8A33D"></span>main · ready</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Quiet</h3>
+      <p>Monkeytype calm. Flat monochrome surfaces, no borders, generous space, one warm accent. Chrome melts away — code is the hero. This is the easiest to make feel premium + minimal.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="glass" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:10px;background:#0c0d14;">
+      <div class="wb b">
+        <div class="act"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="side"><div class="h">Explorer</div><div class="row" style="width:80%"></div><div class="row" style="width:60%"></div><div class="row" style="width:72%"></div><div class="row" style="width:50%"></div></div>
+        <div class="ed"><div class="ln k"></div><div class="ln s"></div><div class="ln" style="width:55%"></div><div class="ln" style="width:64%"></div><div class="ln s"></div></div>
+        <div class="stat"><span class="dot" style="background:#8b8bff"></span>main · ready</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Glass</h3>
+      <p>Liquid Glass as the brand default. Translucent layered panels, soft glow accents, depth + blur. Most "wow," most distinctive. Heaviest on GPU; needs a solid-fallback for low-end machines.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="editorial" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:10px;background:#08080a;">
+      <div class="wb c">
+        <div class="act"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="side"><div class="h">Explorer</div><div class="row" style="width:80%"></div><div class="row" style="width:60%"></div><div class="row" style="width:72%"></div><div class="row" style="width:50%"></div></div>
+        <div class="ed"><div class="ln k"></div><div class="ln s"></div><div class="ln" style="width:55%"></div><div class="ln" style="width:64%"></div><div class="ln s"></div></div>
+        <div class="stat"><span class="dot" style="background:#635BFF"></span>main · ready</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Editorial</h3>
+      <p>Linear / Vercel energy. Crisp near-black, hairline borders, tight 6px corners, one electric accent, refined type. Sharp + professional. Looks expensive without GPU cost.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:18px;">My pick: <b>A (Quiet) as the default</b>, with <b>C (Editorial)</b> and <b>B (Glass)</b> as one-click UI Packs. Quiet = your "premium minimal" wish, and it's the cheapest to keep cohesive across 13 panels. But tell me which one is the Compyle soul.</p>

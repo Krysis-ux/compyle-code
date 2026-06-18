@@ -1,0 +1,220 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/*
+ * Compyle shared design language. One source of truth for the look of every Compyle
+ * panel so the product feels cohesive instead of 13 separate screens. Panels opt in by
+ * using the `.compyle-*` primitive classes below. Spacing, type, and radius come from
+ * tokens so a UI Pack (or the user) can retune the whole suite at once.
+ *
+ * Loaded once (imported from compyleAppearance.contribution.ts).
+ */
+
+.monaco-workbench {
+	/* Type scale */
+	--compyle-font-h1: 19px;
+	--compyle-font-h2: 14px;
+	--compyle-font-body: 13px;
+	--compyle-font-small: 11.5px;
+	--compyle-font-micro: 10.5px;
+
+	/* Spacing scale (multiplied by density elsewhere) */
+	--compyle-space-1: 6px;
+	--compyle-space-2: 10px;
+	--compyle-space-3: 16px;
+	--compyle-space-4: 24px;
+	--compyle-space-5: 32px;
+}
+
+/* ---- Panel shell -------------------------------------------------------- */
+
+.compyle-panel {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	color: var(--vscode-foreground);
+	background: var(--vscode-editor-background);
+	font-size: var(--compyle-font-body);
+}
+
+.compyle-panel-header {
+	padding: var(--compyle-space-4) var(--compyle-space-4) var(--compyle-space-3);
+	flex-shrink: 0;
+}
+
+.compyle-panel-body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 0 var(--compyle-space-4) var(--compyle-space-5);
+}
+
+.compyle-h1 {
+	margin: 0;
+	font-size: var(--compyle-font-h1);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+.compyle-h2 {
+	margin: 0 0 var(--compyle-space-2);
+	font-size: var(--compyle-font-h2);
+	font-weight: 600;
+}
+
+.compyle-sub {
+	margin-top: var(--compyle-space-1);
+	font-size: var(--compyle-font-small);
+	opacity: 0.65;
+	max-width: 680px;
+	line-height: 1.5;
+}
+
+.compyle-label {
+	font-size: var(--compyle-font-micro);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.5;
+	margin-bottom: var(--compyle-space-2);
+}
+
+/* ---- Cards -------------------------------------------------------------- */
+
+.compyle-card {
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.18));
+	background: var(--vscode-editorWidget-background, transparent);
+	padding: var(--compyle-space-3);
+	cursor: pointer;
+	transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.compyle-card:hover {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+	background: var(--vscode-list-hoverBackground);
+}
+
+.compyle-card.selected {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 12%, transparent);
+}
+
+/* ---- Buttons ------------------------------------------------------------ */
+
+.compyle-btn {
+	height: 32px;
+	padding: 0 var(--compyle-space-3);
+	border: 1px solid transparent;
+	border-radius: var(--compyle-radius, 6px);
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.compyle-btn:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.compyle-btn.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+}
+
+.compyle-btn.primary:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.compyle-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ---- Fields ------------------------------------------------------------- */
+
+.compyle-field {
+	width: 100%;
+	height: 32px;
+	padding: 0 var(--compyle-space-2);
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid var(--vscode-input-border, var(--vscode-widget-border, transparent));
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-family: inherit;
+	font-size: var(--compyle-font-body);
+	outline: none;
+}
+
+.compyle-field:focus {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+}
+
+/* =========================================================================
+ * Quiet pack — the signature look. Softens chrome so the code is the hero:
+ * calmer borders, flatter surfaces, gentle hovers. Applied via the
+ * `.compyle-pack-quiet` class the appearance service sets on the container.
+ * ========================================================================= */
+
+.compyle-pack-quiet .compyle-card,
+.compyle-pack-quiet .compyle-field {
+	border-color: color-mix(in srgb, var(--vscode-foreground) 12%, transparent);
+}
+
+.compyle-pack-quiet .compyle-card {
+	background: color-mix(in srgb, var(--vscode-foreground) 3%, transparent);
+}
+
+.compyle-pack-quiet .compyle-panel-header {
+	border-bottom: none;
+}
+
+/* =========================================================================
+ * Minimal mode — reduced chrome, flatter surfaces. Pure cosmetics: every
+ * feature stays exactly where it was, just quieter. No part heights change,
+ * so the editor never desyncs. Toggled via the `.compyle-minimal` class.
+ * ========================================================================= */
+
+/* Drop the borders between workbench parts. */
+.compyle-minimal .monaco-workbench .part.sidebar,
+.compyle-minimal .monaco-workbench .part.activitybar,
+.compyle-minimal .monaco-workbench .part.panel,
+.compyle-minimal .monaco-workbench .part.auxiliarybar {
+	border-color: transparent !important;
+}
+
+/* Flatten the editor tabs; reveal the close button only on hover/active. */
+.compyle-minimal .monaco-workbench .tabs-container > .tab {
+	border-right-color: transparent !important;
+}
+
+.compyle-minimal .monaco-workbench .tabs-container > .tab .tab-actions {
+	opacity: 0;
+	transition: opacity 0.1s ease;
+}
+
+.compyle-minimal .monaco-workbench .tabs-container > .tab:hover .tab-actions,
+.compyle-minimal .monaco-workbench .tabs-container > .tab.active .tab-actions {
+	opacity: 1;
+}
+
+/* Calm the editor title bar and status bar dividers. */
+.compyle-minimal .monaco-workbench .editor-group-container > .title {
+	border-bottom-color: transparent !important;
+	box-shadow: none !important;
+}
+
+.compyle-minimal .monaco-workbench .part.statusbar {
+	border-top-color: transparent !important;
+}
+
+/* Dim inactive activity-bar icons so the active one leads the eye. */
+.compyle-minimal .monaco-workbench .activitybar .monaco-action-bar .action-item:not(.checked):not(:hover) {
+	opacity: 0.55;
+	transition: opacity 0.12s ease;
+}
+

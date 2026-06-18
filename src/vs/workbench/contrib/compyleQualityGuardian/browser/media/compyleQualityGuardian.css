@@ -1,0 +1,205 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.cqg-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	color: var(--vscode-foreground);
+}
+
+.cqg-header {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 20px 24px 14px;
+	border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.cqg-title-box {
+	flex: 1;
+	min-width: 0;
+}
+
+.cqg-title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.cqg-subtitle {
+	margin-top: 4px;
+	font-size: 12.5px;
+	opacity: 0.7;
+}
+
+.cqg-risk {
+	font-size: 12px;
+	font-weight: 600;
+	padding: 4px 12px;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+.cqg-risk.risk-low {
+	background: color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 22%, transparent);
+	color: var(--vscode-testing-iconPassed, #4caf50);
+}
+
+.cqg-risk.risk-medium {
+	background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 22%, transparent);
+	color: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+.cqg-risk.risk-high {
+	background: color-mix(in srgb, var(--vscode-testing-iconFailed, #f14c4c) 22%, transparent);
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.cqg-runall {
+	height: 30px;
+	padding: 0 16px;
+	border: none;
+	border-radius: 6px;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.cqg-runall:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.cqg-runall:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.cqg-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px 24px 28px;
+	max-width: 860px;
+}
+
+.cqg-empty {
+	opacity: 0.7;
+	padding: 32px 0;
+	font-size: 13px;
+}
+
+.cqg-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 12px 14px;
+	border-radius: 8px;
+	border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
+	margin-bottom: 8px;
+}
+
+.cqg-status {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	background: var(--vscode-descriptionForeground, #888);
+}
+
+.cqg-status.status-running {
+	background: var(--vscode-progressBar-background, #3794ff);
+	animation: cqg-pulse 1s ease-in-out infinite;
+}
+
+.cqg-status.status-passed {
+	background: var(--vscode-testing-iconPassed, #4caf50);
+}
+
+.cqg-status.status-failed {
+	background: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.cqg-status.status-unknown {
+	background: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+@keyframes cqg-pulse {
+	0%, 100% { opacity: 0.4; }
+	50% { opacity: 1; }
+}
+
+.cqg-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.cqg-label-line {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cqg-label {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.cqg-critical {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: color-mix(in srgb, var(--vscode-testing-iconFailed, #f14c4c) 18%, transparent);
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.cqg-command {
+	display: block;
+	margin-top: 3px;
+	font-family: var(--monaco-monospace-font);
+	font-size: 12px;
+	opacity: 0.75;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cqg-status-text {
+	font-size: 12px;
+	width: 130px;
+	text-align: right;
+	flex-shrink: 0;
+	opacity: 0.8;
+}
+
+.cqg-status-text.text-passed {
+	color: var(--vscode-testing-iconPassed, #4caf50);
+}
+
+.cqg-status-text.text-failed {
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.cqg-status-text.text-unknown {
+	color: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+.cqg-run {
+	flex-shrink: 0;
+	height: 28px;
+	padding: 0 16px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 5px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.cqg-run:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}

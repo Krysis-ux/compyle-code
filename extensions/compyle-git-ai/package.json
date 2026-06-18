@@ -1,0 +1,53 @@
+{
+  "name": "compyle-git-ai",
+  "publisher": "compyle",
+  "displayName": "Compyle Git AI",
+  "description": "AI commit messages for Compyle Code, powered by Compyle Brain.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.5.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": false,
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "extensionDependencies": [
+    "vscode.git"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension",
+  "scripts": {
+    "compile": "gulp compile-extension:compyle-git-ai",
+    "watch": "gulp watch-extension:compyle-git-ai"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "compyle.git.generateCommitMessage",
+        "title": "Generate Commit Message with Compyle Brain",
+        "category": "Compyle",
+        "icon": "$(sparkle)"
+      }
+    ],
+    "menus": {
+      "scm/inputBox": [
+        {
+          "command": "compyle.git.generateCommitMessage",
+          "when": "scmProvider == git"
+        }
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/vscode.git"
+  }
+}

@@ -15,6 +15,8 @@ import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IRequestService, asJson, asText, isSuccess } from '../../../../platform/request/common/request.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { CompyleBrainProvider, CompyleBrainProviderConfig, ILocalModelInfo } from '../common/compyleBrain.js';
+import { COMPYLE_AGENT_MODE_SETTING, getAgentModeSystemPrompt } from '../common/compyleAgentModes.js';
+import { ICompyleRouterService } from '../../compyleRouter/browser/compyleRouterService.js';
 
 export const ICompyleBrainService = createDecorator<ICompyleBrainService>('compyleBrainService');
 
@@ -83,6 +85,7 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 		@ISecretStorageService private readonly _secretStorageService: ISecretStorageService,
 		@IRequestService private readonly _requestService: IRequestService,
 		@IDialogService private readonly _dialogService: IDialogService,
+		@ICompyleRouterService private readonly _routerService: ICompyleRouterService,
 	) {
 		super();
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
@@ -184,13 +187,39 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			}
 		}
 
+		// Route + agent mode both contribute a system-prompt prefix.
+		const promptText = messages.map(m => m.content).join('\n');
+		const decision = this._routerService.route(promptText);
+		const decorated = this._applyPrefixes(options, decision.systemPrefix);
+
+		let reply: string;
 		if (config.provider === CompyleBrainProvider.Anthropic) {
-			return this._chatAnthropic(config, apiKey, messages, options, token);
+			reply = await this._chatAnthropic(config, apiKey, messages, decorated, token);
+		} else if (config.provider === CompyleBrainProvider.Ollama) {
+			reply = await this._chatOllama(config, messages, decorated, token);
+		} else {
+			reply = await this._chatOpenAICompatible(config, apiKey, messages, decorated, token);
 		}
-		if (config.provider === CompyleBrainProvider.Ollama) {
-			return this._chatOllama(config, messages, options, token);
+
+		// Quality gate: advisory only — flag likely secrets / dangerous commands.
+		const review = this._routerService.review(reply);
+		this._routerService.log(decision, review.findings.length);
+		if (review.findings.length && !options.silent) {
+			const lines = review.findings.map(f => `- ${f.message}`).join('\n');
+			const banner = localize('compyle.router.qualityBanner', "⚠️ Compyle Router flagged this output. Review before use:\n{0}", lines);
+			return `${banner}\n\n${reply}`;
 		}
-		return this._chatOpenAICompatible(config, apiKey, messages, options, token);
+		return reply;
+	}
+
+	/** Prepend the active agent mode and router prefixes to the request's system prompt. */
+	private _applyPrefixes(options: ICompyleChatOptions, routePrefix: string): ICompyleChatOptions {
+		const agentPrefix = getAgentModeSystemPrompt(this._configurationService.getValue<string>(COMPYLE_AGENT_MODE_SETTING));
+		const system = [agentPrefix, routePrefix, options.system].filter(Boolean).join('\n\n');
+		if (!system) {
+			return options;
+		}
+		return { ...options, system };
 	}
 
 	private async _chatAnthropic(config: CompyleBrainProviderConfig, apiKey: string | undefined, messages: ICompyleChatMessage[], options: ICompyleChatOptions, token: CancellationToken): Promise<string> {

@@ -1,0 +1,219 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.ctc-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	color: var(--vscode-foreground);
+	background: var(--vscode-editor-background);
+	box-sizing: border-box;
+}
+
+.ctc-root *,
+.ctc-root *::before,
+.ctc-root *::after {
+	box-sizing: border-box;
+}
+
+.ctc-header {
+	padding: 20px 24px 8px;
+	flex-shrink: 0;
+}
+
+.ctc-title {
+	margin: 0;
+	font-size: 19px;
+	font-weight: 650;
+}
+
+.ctc-subtitle {
+	margin-top: 5px;
+	font-size: 12.5px;
+	opacity: 0.72;
+}
+
+.ctc-toolbar {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	padding: 10px 24px 14px;
+	flex-wrap: wrap;
+	flex-shrink: 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--vscode-foreground) 11%, transparent);
+}
+
+.ctc-select {
+	height: 32px;
+	min-width: 248px;
+	padding: 0 10px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid var(--vscode-dropdown-border, color-mix(in srgb, var(--vscode-foreground) 14%, transparent));
+	background: var(--vscode-dropdown-background);
+	color: var(--vscode-dropdown-foreground);
+	font-size: 13px;
+}
+
+.ctc-tool {
+	height: 32px;
+	padding: 0 14px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: var(--compyle-radius, 6px);
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.ctc-tool:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.ctc-tool.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}
+
+.ctc-tool.primary:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.ctc-tool.primary:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.ctc-panes {
+	flex: 1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 14px;
+	padding: 18px 24px 0;
+	min-height: 0;
+}
+
+.ctc-pane {
+	min-width: 0;
+	min-height: 0;
+	display: grid;
+	grid-template-rows: 30px minmax(0, 1fr);
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 13%, transparent);
+	border-radius: var(--compyle-radius, 8px);
+	background: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) 96%, transparent);
+	overflow: hidden;
+}
+
+.ctc-pane-header,
+.ctc-pane > .ctc-pane-label {
+	height: 30px;
+	display: flex;
+	align-items: center;
+	padding: 0 12px;
+	margin: 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+}
+
+.ctc-pane-header {
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.ctc-pane-label {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	opacity: 0.72;
+	white-space: nowrap;
+}
+
+.ctc-out-actions {
+	display: flex;
+	gap: 6px;
+}
+
+.ctc-mini {
+	height: 22px;
+	padding: 0 8px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 5px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 11px;
+	cursor: pointer;
+}
+
+.ctc-mini:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.ctc-area {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	resize: none;
+	padding: 12px;
+	border: 0;
+	border-radius: 0;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-family: var(--monaco-monospace-font);
+	font-size: 12.5px;
+	line-height: 1.5;
+	outline: none;
+}
+
+.ctc-area:focus {
+	box-shadow: inset 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.ctc-note {
+	padding: 12px 24px 4px;
+	font-size: 12px;
+	opacity: 0.72;
+	flex-shrink: 0;
+}
+
+.ctc-note.needs-ai {
+	color: var(--vscode-editorWarning-foreground, #cca700);
+	opacity: 0.95;
+}
+
+.ctc-warnings {
+	padding: 5px 24px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+.ctc-warning {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	font-size: 12px;
+	opacity: 0.88;
+	line-height: 1.45;
+}
+
+.ctc-warning-icon {
+	opacity: 0.75;
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+@media (max-width: 760px) {
+	.ctc-panes {
+		grid-template-columns: 1fr;
+	}
+
+	.ctc-select {
+		min-width: 0;
+		flex: 1;
+	}
+}

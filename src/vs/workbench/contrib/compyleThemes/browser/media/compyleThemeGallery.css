@@ -1,0 +1,236 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.tg-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	color: var(--vscode-foreground);
+}
+
+/* ---- Header ------------------------------------------------------------- */
+
+.tg-header {
+	display: flex;
+	justify-content: center;
+	padding: 40px 24px 18px;
+}
+
+.tg-header-inner {
+	width: 100%;
+	max-width: 720px;
+}
+
+.tg-title-row {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.tg-title {
+	margin: 0;
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+.tg-count {
+	font-size: 12px;
+	opacity: 0.45;
+}
+
+.tg-search-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.tg-search-icon {
+	position: absolute;
+	left: 14px;
+	font-size: 14px !important;
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+.tg-search {
+	width: 100%;
+	height: 42px;
+	padding: 0 16px 0 38px;
+	border-radius: 10px;
+	border: 1px solid transparent;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 13.5px;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
+
+.tg-search::placeholder {
+	opacity: 0.4;
+}
+
+.tg-search:focus {
+	border-color: var(--vscode-focusBorder);
+}
+
+.tg-tabs {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.tg-tab {
+	padding: 5px 14px;
+	border-radius: 999px;
+	cursor: pointer;
+	font-size: 12px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	opacity: 0.55;
+	user-select: none;
+	transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.tg-tab:hover {
+	opacity: 0.85;
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.tg-tab.active {
+	opacity: 1;
+	background: var(--vscode-list-activeSelectionBackground, var(--vscode-button-background));
+	color: var(--vscode-list-activeSelectionForeground, var(--vscode-button-foreground));
+}
+
+/* ---- List --------------------------------------------------------------- */
+
+.tg-scroll {
+	flex: 1;
+	overflow-y: auto;
+	display: flex;
+	justify-content: center;
+	padding: 0 24px 40px;
+}
+
+.tg-list {
+	width: 100%;
+	max-width: 720px;
+}
+
+.tg-empty {
+	opacity: 0.5;
+	text-align: center;
+	padding: 48px 0;
+	font-size: 13px;
+}
+
+.tg-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	height: 46px;
+	padding: 0 14px;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background 0.1s ease;
+}
+
+.tg-row:hover {
+	background: var(--vscode-list-hoverBackground);
+}
+
+.tg-row.active {
+	background: color-mix(in srgb, var(--vscode-focusBorder) 12%, transparent);
+}
+
+.tg-row-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.tg-check {
+	font-size: 13px !important;
+	color: var(--vscode-focusBorder);
+	opacity: 0;
+	flex-shrink: 0;
+}
+
+.tg-row.active .tg-check {
+	opacity: 1;
+}
+
+.tg-name {
+	font-size: 14px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	opacity: 0.85;
+}
+
+.tg-row:hover .tg-name,
+.tg-row.active .tg-name {
+	opacity: 1;
+}
+
+.tg-row-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.tg-fav {
+	font-size: 13px !important;
+	opacity: 0;
+	color: var(--vscode-descriptionForeground);
+	transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+.tg-row:hover .tg-fav {
+	opacity: 0.6;
+}
+
+.tg-fav:hover {
+	opacity: 1 !important;
+}
+
+.tg-fav.on {
+	opacity: 1;
+	color: var(--vscode-charts-yellow, #e2c08d);
+}
+
+/* ---- Swatch palette (overlapping dots) ---------------------------------- */
+
+.tg-swatches {
+	display: flex;
+	align-items: center;
+	padding-left: 5px;
+}
+
+.tg-dot {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	margin-left: -5px;
+	background: var(--vscode-editorWidget-background);
+	box-shadow: 0 0 0 1.5px var(--vscode-editor-background, #1e1e1e);
+	transition: transform 0.12s ease;
+}
+
+.tg-dot:first-child {
+	margin-left: 0;
+}
+
+.tg-row:hover .tg-dot {
+	transform: scale(1.06);
+}

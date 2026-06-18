@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+	<id>@@NAME@@.desktop</id>
+	<metadata_license>@@LICENSE@@</metadata_license>
+	<project_license>@@LICENSE@@</project_license>
+	<name>@@NAME_LONG@@</name>
+	<url type="homepage">https://github.com/krysis-ux/compyle-code</url>
+	<summary>Compyle Code. Premium code editing, AI-native, privacy-first.</summary>
+	<description>
+		<p>Compyle Code is a premium open-source IDE built on Code - OSS. It features a built-in AI assistant (Compyle Brain), Open VSX extension registry, privacy-first telemetry defaults, a large theme gallery, and a rich developer experience. Compyle Code is not affiliated with Microsoft.</p>
+	</description>
+	<screenshots>
+		<screenshot type="default">
+			<image>https://github.com/krysis-ux/compyle-code/raw/main/assets/compyle/screenshot-placeholder.png</image>
+			<caption>Compyle Code - Premium AI-native code editor</caption>
+		</screenshot>
+	</screenshots>
+</component>

@@ -1,0 +1,264 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.crd-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	color: var(--vscode-foreground);
+}
+
+.crd-header {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 20px 24px 14px;
+	border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.crd-title-box {
+	flex: 1;
+	min-width: 0;
+}
+
+.crd-title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.crd-subtitle {
+	margin-top: 4px;
+	font-size: 12.5px;
+	opacity: 0.7;
+}
+
+.crd-refresh {
+	flex-shrink: 0;
+	height: 28px;
+	padding: 0 12px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 5px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.crd-refresh:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.crd-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 20px 24px 32px;
+	max-width: 860px;
+}
+
+.crd-loading,
+.crd-empty {
+	opacity: 0.7;
+	padding: 32px 0;
+}
+
+.crd-empty-title {
+	font-size: 15px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.crd-empty-body {
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+/* ---- Summary grid ------------------------------------------------------- */
+
+.crd-summary {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.crd-summary-item {
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: var(--vscode-editorWidget-background, rgba(128, 128, 128, 0.08));
+	border: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.crd-summary-label {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	opacity: 0.6;
+}
+
+.crd-summary-value {
+	margin-top: 4px;
+	font-size: 14px;
+	font-weight: 600;
+	word-break: break-word;
+}
+
+/* ---- Warnings ----------------------------------------------------------- */
+
+.crd-warnings {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.crd-warning {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	padding: 10px 12px;
+	border-radius: 6px;
+	background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 14%, transparent);
+	font-size: 12.5px;
+	line-height: 1.45;
+}
+
+.crd-warning-icon {
+	color: var(--vscode-editorWarning-foreground, #cca700);
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+/* ---- Sections ----------------------------------------------------------- */
+
+.crd-section {
+	margin-bottom: 24px;
+}
+
+.crd-section-title {
+	margin: 0 0 10px;
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	opacity: 0.75;
+}
+
+/* ---- Commands ----------------------------------------------------------- */
+
+.crd-cmd {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
+	margin-bottom: 8px;
+}
+
+.crd-cmd-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.crd-cmd-label {
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.crd-cmd-text {
+	display: block;
+	margin-top: 3px;
+	font-family: var(--monaco-monospace-font);
+	font-size: 12px;
+	opacity: 0.8;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.crd-run {
+	flex-shrink: 0;
+	height: 28px;
+	padding: 0 16px;
+	border: none;
+	border-radius: 5px;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.crd-run:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+/* ---- Env ---------------------------------------------------------------- */
+
+.crd-env-note {
+	font-size: 12.5px;
+	opacity: 0.75;
+	margin-bottom: 8px;
+}
+
+.crd-env-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.crd-env-key {
+	font-family: var(--monaco-monospace-font);
+	font-size: 12px;
+	padding: 3px 8px;
+	border-radius: 4px;
+	background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.15));
+}
+
+/* ---- Explanation -------------------------------------------------------- */
+
+.crd-explain {
+	font-size: 13px;
+	line-height: 1.6;
+	opacity: 0.9;
+}
+
+/* ---- Action bar --------------------------------------------------------- */
+
+.crd-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 28px;
+	padding-top: 20px;
+	border-top: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.crd-action {
+	height: 34px;
+	padding: 0 18px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 6px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.crd-action:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.crd-action.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}
+
+.crd-action.primary:hover {
+	background: var(--vscode-button-hoverBackground);
+}

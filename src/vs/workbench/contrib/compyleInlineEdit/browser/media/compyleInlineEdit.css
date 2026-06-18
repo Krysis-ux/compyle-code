@@ -1,0 +1,103 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.compyle-inline-edit {
+	display: flex;
+	flex-direction: column;
+	width: 460px;
+	max-width: 80vw;
+	padding: 8px;
+	border-radius: var(--compyle-radius, 8px);
+	background: var(--vscode-editorWidget-background);
+	color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+	border: 1px solid var(--compyle-accent, var(--vscode-focusBorder));
+	box-shadow: var(--compyle-shadow, 0 6px 18px rgba(0, 0, 0, 0.32));
+	font-family: var(--vscode-font-family);
+	z-index: 50;
+}
+
+.compyle-inline-edit .cie-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+}
+
+.compyle-inline-edit .cie-input {
+	flex: 1;
+	min-height: 28px;
+	max-height: 160px;
+	resize: none;
+	padding: 6px 8px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid var(--vscode-input-border, transparent);
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-family: inherit;
+	font-size: 13px;
+	line-height: 1.4;
+	outline: none;
+}
+
+.compyle-inline-edit .cie-input:focus {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+}
+
+.compyle-inline-edit .cie-send {
+	height: 28px;
+	padding: 0 12px;
+	border: none;
+	border-radius: var(--compyle-radius, 6px);
+	background: var(--compyle-accent, var(--vscode-button-background));
+	color: var(--vscode-button-foreground);
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.compyle-inline-edit .cie-send:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+
+.compyle-inline-edit .cie-hint {
+	margin-top: 5px;
+	font-size: 11px;
+	opacity: 0.6;
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.compyle-inline-edit .cie-hint .cie-error {
+	color: var(--vscode-errorForeground);
+	opacity: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.compyle-inline-edit.busy .cie-input {
+	opacity: 0.6;
+}
+
+.compyle-inline-edit .cie-review-label {
+	flex: 1;
+	font-size: 12.5px;
+	font-weight: 600;
+	align-self: center;
+}
+
+.compyle-inline-edit .cie-reject {
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+}
+
+/* Highlight the range an inline AI edit just wrote, while it awaits Accept/Reject. */
+.compyle-inline-edit-pending {
+	background-color: color-mix(in srgb, var(--compyle-accent, #6a6aff) 18%, transparent);
+	border-radius: 2px;
+}
+

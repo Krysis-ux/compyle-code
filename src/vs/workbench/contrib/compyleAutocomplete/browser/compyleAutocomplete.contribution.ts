@@ -20,6 +20,7 @@ import { ITextModel } from '../../../../editor/common/model.js';
 import { Position } from '../../../../editor/common/core/position.js';
 import { Range } from '../../../../editor/common/core/range.js';
 import { ICompyleBrainService } from '../../compyleBrain/browser/compyleBrainService.js';
+import { ICompyleFimService, FIM_BACKEND_SETTING, FIM_ENDPOINT_SETTING, FIM_MODEL_SETTING, FIM_MAX_TOKENS_SETTING, FIM_TEMPERATURE_SETTING } from './compyleFimService.js';
 
 const ENABLED_SETTING = 'compyle.autocomplete.enabled';
 const DEBOUNCE_SETTING = 'compyle.autocomplete.debounce';
@@ -65,6 +66,48 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			description: localize('compyle.autocomplete.debounce', "How long to wait after you stop typing (in milliseconds) before requesting an AI completion."),
 			scope: ConfigurationScope.APPLICATION,
 		},
+		[FIM_BACKEND_SETTING]: {
+			type: 'string',
+			enum: ['brain', 'tabby', 'ollama', 'lmstudio', 'openai-compat'],
+			enumDescriptions: [
+				localize('compyle.autocomplete.backend.brain', "Use Compyle Brain (chat-based). Works with any configured provider but is slower."),
+				localize('compyle.autocomplete.backend.tabby', "A self-hosted Tabby server (fast fill-in-the-middle)."),
+				localize('compyle.autocomplete.backend.ollama', "A local Ollama server with a FIM-capable model."),
+				localize('compyle.autocomplete.backend.lmstudio', "A local LM Studio server."),
+				localize('compyle.autocomplete.backend.openaiCompat', "Any OpenAI-compatible /v1/completions endpoint."),
+			],
+			default: 'brain',
+			description: localize('compyle.autocomplete.backend', "Which engine produces autocomplete suggestions. Dedicated FIM backends are much faster than chat."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		[FIM_ENDPOINT_SETTING]: {
+			type: 'string',
+			default: 'http://localhost:11434',
+			description: localize('compyle.autocomplete.endpoint', "Base URL of the FIM backend server (used when the backend is not Compyle Brain)."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		[FIM_MODEL_SETTING]: {
+			type: 'string',
+			default: 'qwen2.5-coder:1.5b',
+			description: localize('compyle.autocomplete.model', "Model name the FIM backend should use for completions."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		[FIM_MAX_TOKENS_SETTING]: {
+			type: 'number',
+			default: 128,
+			minimum: 16,
+			maximum: 512,
+			description: localize('compyle.autocomplete.maxTokens', "Maximum tokens a FIM completion may generate."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		[FIM_TEMPERATURE_SETTING]: {
+			type: 'number',
+			default: 0.1,
+			minimum: 0,
+			maximum: 1,
+			description: localize('compyle.autocomplete.temperature', "Sampling temperature for FIM completions. Lower is more deterministic."),
+			scope: ConfigurationScope.APPLICATION,
+		},
 	},
 });
 
@@ -79,13 +122,16 @@ class CompyleInlineCompletionsProvider implements InlineCompletionsProvider {
 	constructor(
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
+		@ICompyleFimService private readonly _fimService: ICompyleFimService,
 	) { }
 
 	async provideInlineCompletions(model: ITextModel, position: Position, context: InlineCompletionContext, token: CancellationToken): Promise<InlineCompletions | undefined> {
 		if (this._configurationService.getValue<boolean>(ENABLED_SETTING, { resource: model.uri }) !== true) {
 			return undefined;
 		}
-		if (!this._brainService.isConfigured()) {
+		// A dedicated FIM backend stands on its own; only the chat fallback needs Brain configured.
+		const useFim = this._fimService.hasBackend();
+		if (!useFim && !this._brainService.isConfigured()) {
 			return undefined;
 		}
 		if (this._configurationService.getValue<string>('compyle.modes.activeMode') === 'focus') {
@@ -123,24 +169,30 @@ class CompyleInlineCompletionsProvider implements InlineCompletionsProvider {
 			suffix = suffix.slice(0, MAX_SUFFIX);
 		}
 
-		const user = [
-			`Language: ${model.getLanguageId()}`,
-			'',
-			'--- code before cursor ---',
-			prefix,
-			'--- code after cursor ---',
-			suffix,
-			'',
-			'Text to insert at the cursor:',
-		].join('\n');
-
+		const languageId = model.getLanguageId();
 		let reply: string;
 		try {
-			reply = await this._brainService.chat(
-				[{ role: 'user', content: user }],
-				{ system: AUTOCOMPLETE_SYSTEM, maxTokens: 256, silent: true },
-				token,
-			);
+			if (useFim) {
+				// Fast path: a dedicated FIM endpoint completes directly at the cursor.
+				reply = await this._fimService.complete(prefix, suffix, languageId, token);
+			} else {
+				// Fallback: chat-based completion through Compyle Brain.
+				const user = [
+					`Language: ${languageId}`,
+					'',
+					'--- code before cursor ---',
+					prefix,
+					'--- code after cursor ---',
+					suffix,
+					'',
+					'Text to insert at the cursor:',
+				].join('\n');
+				reply = await this._brainService.chat(
+					[{ role: 'user', content: user }],
+					{ system: AUTOCOMPLETE_SYSTEM, maxTokens: 256, silent: true },
+					token,
+				);
+			}
 		} catch {
 			return undefined; // network error, local-only block, cancellation — just show nothing
 		}

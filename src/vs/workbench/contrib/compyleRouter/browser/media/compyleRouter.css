@@ -1,0 +1,190 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.cr-root {
+	height: 100%;
+	overflow: auto;
+	padding: 28px 32px 48px;
+	box-sizing: border-box;
+}
+
+.cr-title {
+	margin: 0 0 4px;
+	font-size: 22px;
+	font-weight: 600;
+}
+
+.cr-subtitle {
+	color: var(--vscode-descriptionForeground);
+	font-size: 13px;
+	margin-bottom: 20px;
+}
+
+.cr-section {
+	margin: 26px 0 12px;
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* Mode cards */
+.cr-modes {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 12px;
+}
+
+.cr-mode-card {
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 10px;
+	background: var(--vscode-editorWidget-background);
+	padding: 14px 16px;
+	cursor: pointer;
+	transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.cr-mode-card:hover {
+	transform: translateY(-2px);
+}
+
+.cr-mode-card.active {
+	border-color: var(--vscode-focusBorder);
+	box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.cr-mode-name {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cr-mode-desc {
+	margin-top: 4px;
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* Routing table */
+.cr-table {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.cr-route {
+	display: grid;
+	grid-template-columns: 140px 1fr;
+	gap: 12px;
+	padding: 8px 14px;
+	border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.cr-route:last-child {
+	border-bottom: none;
+}
+
+.cr-route-label {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.cr-route-keywords {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* Custom */
+.cr-custom {
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 8px;
+	padding: 14px 16px;
+}
+
+.cr-custom-path {
+	font-size: 13px;
+	margin-bottom: 12px;
+	font-family: var(--monaco-monospace-font);
+}
+
+.cr-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.cr-btn {
+	padding: 6px 12px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 6px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.cr-btn:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Toggles */
+.cr-toggles {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.cr-toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+/* Log */
+.cr-log-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.cr-log {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.cr-log-empty {
+	padding: 14px 16px;
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.cr-log-row {
+	display: grid;
+	grid-template-columns: 100px 80px 1fr 90px;
+	gap: 10px;
+	padding: 6px 14px;
+	font-size: 12px;
+	border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.cr-log-row:last-child {
+	border-bottom: none;
+}
+
+.cr-log-time {
+	color: var(--vscode-descriptionForeground);
+	font-variant-numeric: tabular-nums;
+}
+
+.cr-log-label {
+	font-weight: 600;
+}
