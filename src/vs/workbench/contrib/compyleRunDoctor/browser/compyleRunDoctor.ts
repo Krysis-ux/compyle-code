@@ -8,6 +8,7 @@ import { $, append, clearNode, addDisposableListener, Dimension } from '../../..
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { localize } from '../../../../nls.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
@@ -36,6 +37,7 @@ export class CompyleRunDoctorEditor extends EditorPane {
 		@IStorageService storageService: IStorageService,
 		@ICompyleRunDoctorService private readonly _runDoctorService: ICompyleRunDoctorService,
 		@IEditorService private readonly _editorService: IEditorService,
+		@ICommandService private readonly _commandService: ICommandService,
 	) {
 		super(CompyleRunDoctorEditor.ID, group, telemetryService, themeService, storageService);
 	}
@@ -135,7 +137,12 @@ export class CompyleRunDoctorEditor extends EditorPane {
 		// Action bar
 		const actions = append(this._content, $('.crd-actions'));
 		if (plan.dev) {
-			this._addAction(actions, localize("compyleRunDoctor.startDev", "Start Dev Server"), true, () => this._runDoctorService.runCommand(plan.dev!.command));
+			// allow-any-unicode-next-line
+			this._addAction(actions, localize("compyleRunDoctor.runAndPreview", "▶ Run + Preview"), true, async () => {
+				this._runDoctorService.runCommand(plan.dev!.command);
+				await this._commandService.executeCommand('compyle.preview.open');
+			});
+			this._addAction(actions, localize("compyleRunDoctor.startDev", "Start Dev Server"), false, () => this._runDoctorService.runCommand(plan.dev!.command));
 		}
 		if (plan.install) {
 			this._addAction(actions, localize("compyleRunDoctor.installDeps", "Install Dependencies"), false, () => this._runDoctorService.runCommand(plan.install!.command));

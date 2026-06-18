@@ -52,13 +52,28 @@ export const COMPYLE_DEFAULT_ROUTES: readonly { label: string; keywords: readonl
 		systemPrefix: 'Treat this as a security-sensitive task. Watch for injection, secrets, unsafe input handling, and auth flaws. Recommend minimal, concrete fixes.',
 	},
 	{
+		label: 'Code Review',
+		keywords: ['review', 'audit', 'code quality', 'what\'s wrong', 'improve this code', 'check this'],
+		systemPrefix: 'You are a senior code reviewer. Focus on correctness, security, performance, and maintainability. Be specific about issues and always suggest concrete improvements.',
+	},
+	{
+		label: 'Research',
+		keywords: ['research', 'find', 'look up', 'compare', 'survey', 'best library', 'which library', 'what is', 'how does'],
+		systemPrefix: 'You are a research assistant. Gather facts, compare options objectively, and summarize findings with clear trade-offs. Cite specific reasons for recommendations.',
+	},
+	{
 		label: 'Debug',
 		keywords: ['error', 'bug', 'crash', 'stack trace', 'traceback', 'exception', 'fails', 'broken', 'not working'],
 		systemPrefix: 'Treat this as debugging. Form hypotheses and isolate the root cause before proposing a fix.',
 	},
 	{
+		label: 'Refactor',
+		keywords: ['refactor', 'clean up', 'reorganize', 'improve structure', 'simplify', 'restructure', 'rewrite'],
+		systemPrefix: 'You are a refactoring specialist. Preserve existing behavior while improving readability, reducing complexity, and improving structure. Show before/after diffs.',
+	},
+	{
 		label: 'Architecture',
-		keywords: ['architect', 'design', 'structure', 'refactor', 'scalab', 'trade-off', 'tradeoff', 'pattern'],
+		keywords: ['architect', 'design', 'structure', 'scalab', 'trade-off', 'tradeoff', 'pattern'],
 		systemPrefix: 'Treat this as a design task. Weigh trade-offs and prefer clear structure over premature code.',
 	},
 	{

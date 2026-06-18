@@ -4,56 +4,44 @@
  *--------------------------------------------------------------------------------------------*/
 
 /*
- * Compyle vibrancy. All rules are scoped under `.compyle-vibrancy` (set on the
- * workbench container by CompyleVibrancyService) so standard mode is untouched.
+ * Compyle vibrancy. Scoped under `.compyle-vibrancy` so standard mode is untouched.
  *
  * Mechanism:
- *  - A soft, static, theme-derived depth background sits behind the workbench.
- *  - Docked chrome (sidebar/panel/etc.) becomes translucent so that depth shows
- *    through = gentle glass.
- *  - Floating widgets (suggest, hover, menus, notifications) get backdrop-blur so
- *    they frost the code behind them = crisp glass.
- *  - The editor stays solid for full readability.
+ *  - A subtle depth gradient lives directly on `.monaco-workbench` (background-image).
+ *  - Docked chrome (sidebar/panel/titlebar/etc.) is semi-transparent + backdrop-blur over
+ *    that gradient. Since the gradient is the parent's background, `backdrop-filter` on
+ *    children correctly blurs what is visually behind them = frosted glass.
+ *  - The editor area stays fully opaque so code remains readable at all times.
+ *  - Floating widgets (suggest, hover, menus) get additional backdrop-blur over editor text.
  *
- * Performance + correctness rules (do not break):
- *  - The depth background is FIXED and static, so backdrop-filter blurs a cached
- *    layer and stays cheap.
- *  - NEVER put backdrop-filter on quick-input, lists, scrollables, minimap,
- *    terminal, notebooks, diffs, or webviews — it breaks rendering and is slow.
- *  - Blur stays modest; heavy blur is what makes glass feel sluggish.
+ * Performance rules (do not break):
+ *  - NEVER put backdrop-filter on quick-input, lists, scrollables, minimap, terminal,
+ *    notebooks, diffs, or webviews — breaks rendering and is expensive.
  */
 
+/* ---- CSS variable definitions -------------------------------------------- */
+
 .compyle-vibrancy {
-	/* Frost color + saturation are overridden per style below. */
-	--compyle-frost: color-mix(in srgb, var(--vscode-editor-background) calc(var(--compyle-opacity) * 100%), transparent);
-	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint) 26%, transparent);
-	--compyle-frost-saturate: saturate(1.15);
-	--compyle-glass-blur: blur(var(--compyle-blur)) var(--compyle-frost-saturate);
+	--compyle-frost: color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-editor-background)) calc(var(--compyle-opacity) * 100%), transparent);
+	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 24%, transparent);
+	--compyle-frost-saturate: saturate(1.3);
+	--compyle-glass-blur: blur(var(--compyle-blur, 16px)) var(--compyle-frost-saturate);
 }
 
-/* Soft static depth background behind the whole workbench. Theme-derived + a
- * single faint accent glow — premium depth, not a rainbow. */
-.compyle-vibrancy .monaco-workbench::before {
-	content: '';
-	position: fixed;
-	inset: 0;
-	z-index: 0;
-	pointer-events: none;
-	background:
-		radial-gradient(60vw 70vh at 12% -10%, color-mix(in srgb, var(--compyle-tint) 22%, transparent), transparent 60%),
-		radial-gradient(55vw 60vh at 95% 110%, color-mix(in srgb, var(--compyle-tint) 14%, transparent), transparent 62%),
-		linear-gradient(160deg,
-			color-mix(in srgb, var(--vscode-editor-background) 92%, black),
-			var(--vscode-editor-background) 55%,
-			color-mix(in srgb, var(--vscode-editor-background) 94%, black));
-}
-
-/* Workbench transparent so the depth background shows through the chrome. */
+/* ---- Depth gradient sits directly on the workbench background ------------- */
+/*
+ * This is the key fix: previously the gradient used ::before at z-index:0 which is
+ * invisible behind all workbench content. Placing it as background-image on the
+ * workbench itself means it IS visible behind all parts that become translucent,
+ * and backdrop-filter on children will correctly blur it.
+ */
 .compyle-vibrancy .monaco-workbench {
-	background: transparent !important;
+	background-image:
+		radial-gradient(ellipse 72% 55% at 12% 5%,   color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 18%, transparent), transparent 65%),
+		radial-gradient(ellipse 58% 48% at 90% 92%,  color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 12%, transparent), transparent 60%) !important;
 }
 
-/* ---- Docked chrome: translucent over the depth background ----------------- */
+/* ---- Docked chrome: translucent + frosted over the depth gradient --------- */
 
 .compyle-vibrancy .monaco-workbench .part.activitybar,
 .compyle-vibrancy .monaco-workbench .part.sidebar,
@@ -66,23 +54,25 @@
 .compyle-vibrancy .compyle-panel,
 .compyle-vibrancy .compyle-card {
 	background-color: var(--compyle-frost) !important;
+	backdrop-filter: var(--compyle-glass-blur) !important;
+	-webkit-backdrop-filter: var(--compyle-glass-blur) !important;
 	border-color: var(--compyle-frost-border);
 }
 
-/* Editor stays solid for readability. */
+/* Editor and its containers stay fully opaque for readability. */
 .compyle-vibrancy .monaco-workbench .part.editor,
 .compyle-vibrancy .editor-group-container > .editor-container {
-	background-color: var(--vscode-editor-background);
+	background-color: var(--vscode-editor-background) !important;
 }
 
 /* Active tab gets an accent underline so selection reads on glass. */
 .compyle-vibrancy .monaco-workbench .tabs-container > .tab.active {
-	box-shadow: inset 0 -2px 0 var(--compyle-tint);
+	box-shadow: inset 0 -2px 0 var(--compyle-tint, var(--vscode-focusBorder));
 }
 
-/* ---- Floating widgets: real backdrop blur over the code ------------------- */
-/* (Quick-input widget excluded on purpose — backdrop-filter there blanks the
- *  results list and is expensive. Translucency only for it.) */
+/* ---- Floating widgets: backdrop-blur over the editor --------------------- */
+/* These absolutely-positioned widgets overlap the editor, so their
+ * backdrop-filter blurs the actual code text behind them. */
 
 .compyle-vibrancy .editor-widget.suggest-widget,
 .compyle-vibrancy .monaco-hover,
@@ -90,17 +80,19 @@
 .compyle-vibrancy .notifications-toasts .notification-toast,
 .compyle-vibrancy .monaco-menu .monaco-menu-container {
 	background-color: var(--compyle-frost) !important;
-	backdrop-filter: var(--compyle-glass-blur);
+	backdrop-filter: var(--compyle-glass-blur) !important;
+	-webkit-backdrop-filter: var(--compyle-glass-blur) !important;
 	border: 1px solid var(--compyle-frost-border);
 }
 
+/* Quick-input gets translucency but no blur (expensive + breaks results list). */
 .compyle-vibrancy .quick-input-widget {
-	background-color: color-mix(in srgb, var(--vscode-quickInput-background) calc((var(--compyle-opacity) + 0.1) * 100%), transparent) !important;
+	background-color: color-mix(in srgb, var(--vscode-quickInput-background) calc((var(--compyle-opacity) + 0.12) * 100%), transparent) !important;
 	border: 1px solid var(--compyle-frost-border);
 }
 
-/* Hard guarantee: never blur dense / scrolling content. Protects performance and
- * keeps quick-open and tree lists rendering correctly. */
+/* ---- Hard backdrop-filter guard: dense/scrolling content never blurs ----- */
+
 .compyle-vibrancy .quick-input-widget,
 .compyle-vibrancy .monaco-list,
 .compyle-vibrancy .monaco-list-rows,
@@ -113,43 +105,46 @@
 .compyle-vibrancy iframe,
 .compyle-vibrancy webview {
 	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
 }
 
 /* ---- Style variants ------------------------------------------------------- */
 
-/* Frost: light, neutral, Apple-like frosted white over the theme. */
+/* Frost: light, neutral, slightly white-tinted. */
 .compyle-vibrancy-style-frost {
-	--compyle-frost: color-mix(in srgb, var(--vscode-editor-background) calc(var(--compyle-opacity) * 88%), transparent);
+	--compyle-frost: color-mix(in srgb,
+		color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-editor-background)) 85%, white)
+		calc(var(--compyle-opacity) * 100%), transparent);
 	--compyle-frost-saturate: saturate(1.2);
 }
 
-/* Acrylic: more saturated, tint-leaning — the Windows acrylic feel. */
+/* Acrylic: saturated + tint-leaning, the Windows acrylic feel. */
 .compyle-vibrancy-style-acrylic {
 	--compyle-frost: color-mix(in srgb,
-		color-mix(in srgb, var(--vscode-editor-background) 80%, var(--compyle-tint))
-		calc(var(--compyle-opacity) * 92%), transparent);
+		color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-editor-background)) 78%, var(--compyle-tint, var(--vscode-focusBorder)))
+		calc(var(--compyle-opacity) * 100%), transparent);
 	--compyle-frost-saturate: saturate(1.6);
-	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint) 34%, transparent);
+	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 36%, transparent);
 }
 
 /* Mica: subtle, desaturated, low blur — a quiet material tint. */
 .compyle-vibrancy-style-mica {
-	--compyle-frost: color-mix(in srgb, var(--vscode-editor-background) calc((var(--compyle-opacity) + 0.08) * 100%), transparent);
-	--compyle-frost-saturate: saturate(0.95);
-	--compyle-glass-blur: blur(calc(var(--compyle-blur) * 0.4)) saturate(0.95);
+	--compyle-frost: color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-editor-background)) calc((var(--compyle-opacity) + 0.08) * 100%), transparent);
+	--compyle-frost-saturate: saturate(0.92);
+	--compyle-glass-blur: blur(calc(var(--compyle-blur, 16px) * 0.45)) saturate(0.92);
 }
 
-/* Tint: translucent accent wash, minimal blur. */
+/* Tint: translucent accent wash, moderate blur. */
 .compyle-vibrancy-style-tint {
 	--compyle-frost: color-mix(in srgb,
-		color-mix(in srgb, var(--vscode-editor-background) 70%, var(--compyle-tint))
-		calc(var(--compyle-opacity) * 90%), transparent);
+		color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-editor-background)) 68%, var(--compyle-tint, var(--vscode-focusBorder)))
+		calc(var(--compyle-opacity) * 100%), transparent);
 	--compyle-frost-saturate: saturate(1.35);
-	--compyle-glass-blur: blur(calc(var(--compyle-blur) * 0.6)) saturate(1.35);
-	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint) 40%, transparent);
+	--compyle-glass-blur: blur(calc(var(--compyle-blur, 16px) * 0.65)) saturate(1.35);
+	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 42%, transparent);
 }
 
-/* ---- Compact mode: tighten chrome without hiding anything ----------------- */
+/* ---- Compact mode --------------------------------------------------------- */
 
 .compyle-compact .monaco-workbench .tabs-container > .tab {
 	padding-top: 0;

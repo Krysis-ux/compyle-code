@@ -54,8 +54,9 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	properties: {
 		[ENABLED_SETTING]: {
 			type: 'boolean',
-			default: false,
-			description: localize('compyle.autocomplete.enabled', "Show AI ghost-text completions as you type, accepted with Tab. Powered by Compyle Brain — each completion calls your configured AI provider, so this is off by default. Toggle it from the status bar."),
+			default: true,
+			// allow-any-unicode-next-line
+			description: localize('compyle.autocomplete.enabled', "Show AI ghost-text completions as you type, accepted with Tab. Powered by Compyle Brain or a dedicated FIM backend. Toggle from the status bar ( ⚡ FIM )."),
 			scope: ConfigurationScope.LANGUAGE_OVERRIDABLE,
 		},
 		[DEBOUNCE_SETTING]: {
@@ -275,13 +276,15 @@ class CompyleAutocompleteStatusBarContribution extends Disposable implements IWo
 		const on = this._configurationService.getValue<boolean>(ENABLED_SETTING) === true;
 		const entry: IStatusbarEntry = {
 			name: localize('compyle.autocomplete.statusBar.name', "Compyle AI Autocomplete"),
-			text: on ? '$(sparkle) AI' : '$(sparkle)',
+			text: on ? '$(sparkle) FIM' : '$(sparkle) FIM',
 			ariaLabel: on
 				? localize('compyle.autocomplete.statusBar.ariaOn', "AI autocomplete is on. Click to turn it off.")
 				: localize('compyle.autocomplete.statusBar.ariaOff', "AI autocomplete is off. Click to turn it on."),
 			tooltip: on
-				? localize('compyle.autocomplete.statusBar.tooltipOn', "AI autocomplete on — click to turn off")
-				: localize('compyle.autocomplete.statusBar.tooltipOff', "AI autocomplete off — click to turn on"),
+				// allow-any-unicode-next-line
+				? localize('compyle.autocomplete.statusBar.tooltipOn', "⚡ FIM autocomplete ON — click to disable\nConfigure backend: compyle.autocomplete.backend\nCurrent: Settings → Compyle → Autocomplete")
+				// allow-any-unicode-next-line
+				: localize('compyle.autocomplete.statusBar.tooltipOff', "⚡ FIM autocomplete OFF — click to enable\nEnable to get ghost-text completions as you type.\nConfigure: compyle.autocomplete.backend (ollama/tabby/brain)"),
 			command: 'compyle.autocomplete.toggle',
 		};
 

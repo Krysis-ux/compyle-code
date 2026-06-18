@@ -10,6 +10,7 @@ import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { basename } from '../../../../base/common/resources.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
 import { ILabelService } from '../../../../platform/label/common/label.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
@@ -31,6 +32,7 @@ interface IToolEntry {
 }
 
 const TOOLS: IToolEntry[] = [
+	{ command: 'compyle.brain.open', label: localize("compyleHome.tool.chat", "Compyle AI"), description: localize("compyleHome.tool.chat.desc", "Chat with your local AI models. Pick a model, ask anything."), icon: 'robot' },
 	{ command: 'compyle.starter.open', label: localize("compyleHome.tool.starter", "Create Project"), description: localize("compyleHome.tool.starter.desc", "Pick an app type, tools, and scaffold a runnable project."), icon: 'rocket' },
 	{ command: 'compyle.appearance.openStudio', label: localize("compyleHome.tool.appearance", "Appearance Studio"), description: localize("compyleHome.tool.appearance.desc", "Change the whole interface personality."), icon: 'paintcan' },
 	{ command: 'compyle.brain.openLocalModels', label: localize("compyleHome.tool.localModels", "Local Models"), description: localize("compyleHome.tool.localModels.desc", "Configure Ollama, LM Studio, or a local endpoint."), icon: 'server-process' },
@@ -60,6 +62,7 @@ export class CompyleHomeEditor extends EditorPane {
 		@IThemeService themeService: IThemeService,
 		@IStorageService storageService: IStorageService,
 		@ICommandService private readonly _commandService: ICommandService,
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@IWorkspacesService private readonly _workspacesService: IWorkspacesService,
 		@IHostService private readonly _hostService: IHostService,
 		@ILabelService private readonly _labelService: ILabelService,
@@ -67,6 +70,10 @@ export class CompyleHomeEditor extends EditorPane {
 	) {
 		super(CompyleHomeEditor.ID, group, telemetryService, themeService, storageService);
 	}
+
+	private _toolCards: HTMLElement[] = [];
+	private _tourIndex = -1;
+	private _tourTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	protected createEditor(parent: HTMLElement): void {
 		const root = append(parent, $('.chd-root'));
@@ -81,6 +88,7 @@ export class CompyleHomeEditor extends EditorPane {
 		this._addHeroAction(heroActions, localize("compyleHome.newProject", "Create Project"), true, () => this._commandService.executeCommand('compyle.starter.open'));
 		this._addHeroAction(heroActions, localize("compyleHome.openFolder", "Open Folder"), false, () => this._openFolder());
 		this._addHeroAction(heroActions, localize("compyleHome.clone", "Clone Repository"), false, () => this._commandService.executeCommand('git.clone'));
+		this._addHeroAction(heroActions, localize("compyleHome.featureTour", "Feature Tour"), false, () => this._startTour());
 
 		// Body columns
 		const columns = append(root, $('.chd-columns'));
@@ -88,13 +96,119 @@ export class CompyleHomeEditor extends EditorPane {
 		const toolsCol = append(columns, $('.chd-col'));
 		append(toolsCol, $('h2.chd-section-title', undefined, localize("compyleHome.tools", "Tools")));
 		const toolsGrid = append(toolsCol, $('.chd-tools'));
+		this._toolCards = [];
 		for (const tool of TOOLS) {
-			this._renderTool(toolsGrid, tool);
+			this._toolCards.push(this._renderTool(toolsGrid, tool));
 		}
+
+		// Quick Settings section
+		this._renderQuickSettings(toolsCol);
 
 		const recentCol = append(columns, $('.chd-col.chd-recent-col'));
 		append(recentCol, $('h2.chd-section-title', undefined, localize("compyleHome.recent", "Recent Projects")));
 		this._recentList = append(recentCol, $('.chd-recent'));
+	}
+
+	private _renderQuickSettings(parent: HTMLElement): void {
+		const section = append(parent, $('.chd-settings-section'));
+		append(section, $('h2.chd-section-title', undefined, localize("compyleHome.settings", "Quick Settings")));
+		const grid = append(section, $('.chd-settings-grid'));
+
+		this._addSettingsRow(grid, localize("compyleHome.settings.aiProvider", "AI Provider"), () => {
+			const sel = $('select.chd-settings-select') as HTMLSelectElement;
+			for (const [val, label] of [['none', 'None'], ['ollama', 'Ollama (Local)'], ['anthropic', 'Anthropic Claude'], ['openai-compatible', 'OpenAI / Custom'], ['lmstudio', 'LM Studio']]) {
+				const opt = append(sel, $('option')) as HTMLOptionElement;
+				opt.value = val;
+				opt.textContent = label;
+			}
+			sel.value = this._configurationService.getValue<string>('compyle.brain.provider') || 'none';
+			this._register(addDisposableListener(sel, 'change', () => this._configurationService.updateValue('compyle.brain.provider', sel.value)));
+			return sel;
+		});
+
+		this._addSettingsRow(grid, localize("compyleHome.settings.appearance", "Appearance Mode"), () => {
+			const sel = $('select.chd-settings-select') as HTMLSelectElement;
+			for (const [val, label] of [['standard', 'Standard'], ['vibrancy', 'Vibrancy (Glass)']]) {
+				const opt = append(sel, $('option')) as HTMLOptionElement;
+				opt.value = val;
+				opt.textContent = label;
+			}
+			sel.value = this._configurationService.getValue<string>('compyle.appearance.mode') || 'standard';
+			this._register(addDisposableListener(sel, 'change', () => this._configurationService.updateValue('compyle.appearance.mode', sel.value)));
+			return sel;
+		});
+
+		this._addSettingsRow(grid, localize("compyleHome.settings.autocomplete", "AI Autocomplete"), () => {
+			const toggle = $('input') as HTMLInputElement;
+			toggle.type = 'checkbox';
+			toggle.className = 'chd-settings-toggle';
+			toggle.checked = this._configurationService.getValue<boolean>('compyle.autocomplete.enabled') === true;
+			this._register(addDisposableListener(toggle, 'change', () => this._configurationService.updateValue('compyle.autocomplete.enabled', toggle.checked)));
+			return toggle;
+		});
+
+		this._addSettingsRow(grid, localize("compyleHome.settings.router", "Router Mode"), () => {
+			const sel = $('select.chd-settings-select') as HTMLSelectElement;
+			for (const [val, label] of [['none', 'Off'], ['default', 'Default'], ['custom', 'Custom']]) {
+				const opt = append(sel, $('option')) as HTMLOptionElement;
+				opt.value = val;
+				opt.textContent = label;
+			}
+			sel.value = this._configurationService.getValue<string>('compyle.router.mode') || 'default';
+			this._register(addDisposableListener(sel, 'change', () => this._configurationService.updateValue('compyle.router.mode', sel.value)));
+			return sel;
+		});
+
+		this._addSettingsRow(grid, localize("compyleHome.settings.agentMode", "Agent Mode"), () => {
+			const sel = $('select.chd-settings-select') as HTMLSelectElement;
+			for (const [val, label] of [['code', 'Code'], ['architect', 'Architect'], ['debug', 'Debug'], ['ask', 'Ask'], ['security', 'Security'], ['test', 'Test'], ['docs', 'Docs']]) {
+				const opt = append(sel, $('option')) as HTMLOptionElement;
+				opt.value = val;
+				opt.textContent = label;
+			}
+			sel.value = this._configurationService.getValue<string>('compyle.agent.mode') || 'code';
+			this._register(addDisposableListener(sel, 'change', () => this._configurationService.updateValue('compyle.agent.mode', sel.value)));
+			return sel;
+		});
+	}
+
+	private _addSettingsRow(parent: HTMLElement, label: string, buildControl: () => HTMLElement): void {
+		const row = append(parent, $('.chd-settings-row'));
+		append(row, $('label.chd-settings-label', undefined, label));
+		append(row, buildControl());
+	}
+
+	private _startTour(): void {
+		this._stopTour();
+		this._tourIndex = 0;
+		this._advanceTour();
+	}
+
+	private _advanceTour(): void {
+		// Remove highlight from previous
+		for (const card of this._toolCards) {
+			card.classList.remove('chd-tour-highlight');
+		}
+		if (this._tourIndex >= this._toolCards.length) {
+			this._tourIndex = -1;
+			return;
+		}
+		const card = this._toolCards[this._tourIndex];
+		card.classList.add('chd-tour-highlight');
+		card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		this._tourIndex++;
+		this._tourTimeout = setTimeout(() => this._advanceTour(), 1800);
+	}
+
+	private _stopTour(): void {
+		if (this._tourTimeout !== undefined) {
+			clearTimeout(this._tourTimeout);
+			this._tourTimeout = undefined;
+		}
+		for (const card of this._toolCards) {
+			card.classList.remove('chd-tour-highlight');
+		}
+		this._tourIndex = -1;
 	}
 
 	private _addHeroAction(parent: HTMLElement, label: string, primary: boolean, run: () => void): void {
@@ -102,13 +216,17 @@ export class CompyleHomeEditor extends EditorPane {
 		this._register(addDisposableListener(button, 'click', run));
 	}
 
-	private _renderTool(parent: HTMLElement, tool: IToolEntry): void {
+	private _renderTool(parent: HTMLElement, tool: IToolEntry): HTMLElement {
 		const card = append(parent, $('.chd-tool'));
 		append(card, $(`.chd-tool-icon.codicon.codicon-${tool.icon}`));
 		const info = append(card, $('.chd-tool-info'));
 		append(info, $('.chd-tool-label', undefined, tool.label));
 		append(info, $('.chd-tool-desc', undefined, tool.description));
-		this._register(addDisposableListener(card, 'click', () => this._commandService.executeCommand(tool.command)));
+		this._register(addDisposableListener(card, 'click', () => {
+			this._stopTour();
+			this._commandService.executeCommand(tool.command);
+		}));
+		return card;
 	}
 
 	private async _openFolder(): Promise<void> {

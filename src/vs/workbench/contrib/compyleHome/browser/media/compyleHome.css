@@ -150,6 +150,68 @@
 	line-height: 1.45;
 }
 
+/* ---- Tour highlight ------------------------------------------------------ */
+
+.chd-tool.chd-tour-highlight {
+	border-color: var(--vscode-textLink-foreground, var(--vscode-focusBorder));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--vscode-textLink-foreground, var(--vscode-focusBorder)) 40%, transparent);
+	animation: chd-tour-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes chd-tour-pulse {
+	0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--vscode-textLink-foreground, var(--vscode-focusBorder)) 40%, transparent); }
+	50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--vscode-textLink-foreground, var(--vscode-focusBorder)) 20%, transparent); }
+}
+
+/* ---- Quick Settings section ---------------------------------------------- */
+
+.chd-settings-section {
+	margin-top: 28px;
+}
+
+.chd-settings-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.chd-settings-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+	border-radius: 8px;
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+	background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+}
+
+.chd-settings-label {
+	flex: 0 0 auto;
+	width: 148px;
+	font-size: 12.5px;
+	font-weight: 600;
+	user-select: none;
+}
+
+.chd-settings-select {
+	height: 26px;
+	flex: 1 1 auto;
+	padding: 0 8px;
+	border-radius: 5px;
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 16%, transparent);
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 12.5px;
+	cursor: pointer;
+}
+
+.chd-settings-toggle {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	accent-color: var(--vscode-textLink-foreground, var(--vscode-focusBorder));
+}
+
 /* ---- Recent ------------------------------------------------------------- */
 
 .chd-recent {

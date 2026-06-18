@@ -98,13 +98,177 @@
 	color: var(--vscode-descriptionForeground);
 }
 
-/* Custom */
-.cr-custom {
-	border: 1px solid var(--vscode-widget-border, transparent);
-	border-radius: 8px;
-	padding: 14px 16px;
+/* Template chips */
+.cr-template-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
 }
 
+.cr-template-label {
+	font-size: 12px;
+	font-weight: 600;
+	opacity: 0.65;
+	white-space: nowrap;
+}
+
+.cr-template-chip {
+	padding: 4px 12px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--vscode-focusBorder) 50%, transparent);
+	background: color-mix(in srgb, var(--vscode-focusBorder) 10%, transparent);
+	color: var(--vscode-foreground);
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 120ms;
+}
+
+.cr-template-chip:hover {
+	background: color-mix(in srgb, var(--vscode-focusBorder) 22%, transparent);
+}
+
+/* Rule list */
+.cr-rule-list {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 8px;
+	overflow: hidden;
+	margin-bottom: 12px;
+}
+
+.cr-rule-empty {
+	padding: 14px 16px;
+	font-size: 12.5px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.cr-rule-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 9px 14px;
+	border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+
+.cr-rule-row:last-child {
+	border-bottom: none;
+}
+
+.cr-rule-info {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.cr-rule-name {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.cr-rule-kw {
+	font-size: 11.5px;
+	color: var(--vscode-descriptionForeground);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cr-rule-btns {
+	display: flex;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+.cr-btn.danger:hover {
+	background: color-mix(in srgb, var(--vscode-editorError-foreground, #f44747) 14%, transparent);
+	color: var(--vscode-editorError-foreground, #f44747);
+	border-color: var(--vscode-editorError-foreground, #f44747);
+}
+
+/* Add row */
+.cr-add-row {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+/* Rule editor form */
+.cr-rule-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px;
+	border: 1px solid var(--vscode-focusBorder);
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) 90%, transparent);
+	margin-bottom: 16px;
+}
+
+.cr-form-title {
+	margin: 0 0 4px;
+	font-size: 13.5px;
+	font-weight: 650;
+}
+
+.cr-form-input {
+	height: 30px;
+	padding: 0 10px;
+	border-radius: 6px;
+	border: 1px solid var(--vscode-input-border, color-mix(in srgb, var(--vscode-foreground) 18%, transparent));
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 13px;
+	font-family: var(--vscode-font-family);
+	outline: none;
+}
+
+.cr-form-input:focus {
+	border-color: var(--vscode-focusBorder);
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.cr-form-textarea {
+	padding: 8px 10px;
+	border-radius: 6px;
+	border: 1px solid var(--vscode-input-border, color-mix(in srgb, var(--vscode-foreground) 18%, transparent));
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 13px;
+	font-family: var(--vscode-font-family);
+	line-height: 1.5;
+	resize: vertical;
+	outline: none;
+}
+
+.cr-form-textarea:focus {
+	border-color: var(--vscode-focusBorder);
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.cr-form-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.cr-btn.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}
+
+.cr-btn.primary:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+/* Custom */
 .cr-custom-path {
 	font-size: 13px;
 	margin-bottom: 12px;

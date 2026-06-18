@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { VSBuffer } from '../../../../base/common/buffer.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { URI } from '../../../../base/common/uri.js';
@@ -52,6 +53,10 @@ export interface ICompyleRouterService {
 	log(decision: ICompyleRoutingDecision, findings: number): void;
 	getLog(): readonly ICompyleRoutingLogEntry[];
 	clearLog(): void;
+	/** Return the currently loaded custom rule config (empty when no file configured). */
+	getCustomConfig(): ICompyleRouterConfig;
+	/** Persist new custom rules to the configured JSON file. Creates it if missing. */
+	saveCustomConfig(config: ICompyleRouterConfig): Promise<void>;
 }
 
 const LOG_LIMIT = 20;
@@ -133,6 +138,26 @@ export class CompyleRouterService extends Disposable implements ICompyleRouterSe
 		}
 		const root = this._contextService.getWorkspace().folders[0]?.uri;
 		return root ? joinPath(root, raw) : undefined;
+	}
+
+	getCustomConfig(): ICompyleRouterConfig {
+		return this._customConfig;
+	}
+
+	async saveCustomConfig(config: ICompyleRouterConfig): Promise<void> {
+		let uri = this._resolveConfigPath();
+		if (!uri) {
+			// No path configured — save to workspace root as compyle-router.json
+			const root = this._contextService.getWorkspace().folders[0]?.uri;
+			if (!root) {
+				return;
+			}
+			uri = joinPath(root, 'compyle-router.json');
+			await this._configurationService.updateValue(COMPYLE_ROUTER_CUSTOM_PATH_SETTING, 'compyle-router.json');
+		}
+		const json = JSON.stringify(config, undefined, '\t');
+		await this._fileService.writeFile(uri, VSBuffer.fromString(json));
+		this._customConfig = config;
 	}
 
 	private async _loadCustomConfig(): Promise<void> {

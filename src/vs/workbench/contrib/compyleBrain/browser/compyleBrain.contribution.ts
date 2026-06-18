@@ -20,6 +20,8 @@ import { COMPYLE_BRAIN_COMMANDS, CompyleBrainProvider } from '../common/compyleB
 import { ICompyleBrainService } from './compyleBrainService.js';
 import { CompyleLocalModelsEditor } from './compyleLocalModels.js';
 import { CompyleLocalModelsInput, CompyleLocalModelsInputSerializer } from './compyleLocalModelsInput.js';
+import { CompyleChatEditor } from './compyleChat.js';
+import { CompyleChatInput, CompyleChatInputSerializer } from './compyleChatInput.js';
 
 // ---------------------------------------------------------------------------
 // Settings registration
@@ -140,6 +142,18 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
 Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
 	.registerEditorSerializer(CompyleLocalModelsInput.ID, CompyleLocalModelsInputSerializer);
 
+Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+	EditorPaneDescriptor.create(
+		CompyleChatEditor,
+		CompyleChatEditor.ID,
+		localize('compyleChat', "Compyle AI"),
+	),
+	[new SyncDescriptor(CompyleChatInput)],
+);
+
+Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
+	.registerEditorSerializer(CompyleChatInput.ID, CompyleChatInputSerializer);
+
 // ---------------------------------------------------------------------------
 // Command registrations
 // ---------------------------------------------------------------------------
@@ -155,11 +169,11 @@ class OpenCompyleBrainAction extends Action2 {
 		});
 	}
 
-	override async run(_accessor: ServicesAccessor): Promise<void> {
-		// TODO: open Compyle Brain panel
-		// For now, open settings to configure the provider
-		const commandService = _accessor.get(ICommandService);
-		await commandService.executeCommand('workbench.action.openSettings', 'compyle.brain');
+	override async run(accessor: ServicesAccessor): Promise<void> {
+		const editorService = accessor.get(IEditorService);
+		const instantiationService = accessor.get(IInstantiationService);
+		const input = instantiationService.createInstance(CompyleChatInput);
+		await editorService.openEditor(input, { pinned: false });
 	}
 }
 
