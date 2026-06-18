@@ -94,7 +94,18 @@
 	],
 	"defaultChatAgent": {
 		"extensionId": "compyle.brain",
-		"documentationUrl": "https://github.com/krysis-ux/compyle-code/blob/main/docs/COMPYLE_CODE_AI_PRIVACY.md"
+		"chatExtensionId": "compyle.brain",
+		"documentationUrl": "https://github.com/krysis-ux/compyle-code/blob/main/docs/COMPYLE_CODE_AI_PRIVACY.md",
+		"provider": {
+			"default": {
+				"id": "github",
+				"name": "GitHub"
+			},
+			"enterprise": {
+				"id": "github-enterprise",
+				"name": "GitHub Enterprise"
+			}
+		}
 	},
 	"onboardingKeymaps": [
 		{

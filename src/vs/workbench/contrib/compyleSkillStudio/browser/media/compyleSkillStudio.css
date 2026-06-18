@@ -1,0 +1,212 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.css-root {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding: 24px 28px;
+	box-sizing: border-box;
+}
+
+.css-title {
+	margin: 0 0 4px;
+	font-size: 22px;
+	font-weight: 600;
+}
+
+.css-subtitle {
+	color: var(--vscode-descriptionForeground);
+	font-size: 13px;
+	margin-bottom: 18px;
+}
+
+.css-columns {
+	flex: 1 1 auto;
+	display: grid;
+	grid-template-columns: minmax(220px, 320px) 1fr;
+	gap: 20px;
+	min-height: 0;
+}
+
+/* ---- List ----------------------------------------------------------------- */
+
+.css-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	overflow: auto;
+	border-right: 1px solid var(--vscode-widget-border, transparent);
+	padding-right: 14px;
+}
+
+.css-list-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.css-list-title {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--vscode-descriptionForeground);
+}
+
+.css-list-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.css-icon-btn {
+	cursor: pointer;
+	opacity: 0.8;
+	padding: 4px;
+	border-radius: 4px;
+}
+
+.css-icon-btn:hover {
+	opacity: 1;
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.css-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.css-row:hover {
+	background: var(--vscode-list-hoverBackground);
+}
+
+.css-row.active {
+	background: var(--vscode-list-activeSelectionBackground);
+	color: var(--vscode-list-activeSelectionForeground);
+}
+
+.css-row-info {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.css-row-name {
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.css-row-desc {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.css-row-del {
+	opacity: 0;
+	cursor: pointer;
+}
+
+.css-row:hover .css-row-del {
+	opacity: 0.7;
+}
+
+.css-row-del:hover {
+	opacity: 1;
+	color: var(--vscode-errorForeground);
+}
+
+.css-empty {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	padding: 10px;
+}
+
+/* ---- Form ----------------------------------------------------------------- */
+
+.css-form {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow: auto;
+	min-height: 0;
+}
+
+.css-label {
+	font-size: 12px;
+	font-weight: 600;
+	margin-top: 6px;
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.css-hint {
+	font-weight: 400;
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.css-input {
+	padding: 6px 10px;
+	border: 1px solid var(--vscode-input-border, transparent);
+	border-radius: 6px;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 13px;
+}
+
+.css-body {
+	flex: 1 1 auto;
+	min-height: 220px;
+	resize: vertical;
+	padding: 10px 12px;
+	border: 1px solid var(--vscode-input-border, transparent);
+	border-radius: 8px;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-family: var(--monaco-monospace-font);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.css-form-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.css-btn {
+	padding: 6px 14px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 6px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.css-btn:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.css-btn.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+}
+
+.css-btn.primary:hover {
+	background: var(--vscode-button-hoverBackground);
+}

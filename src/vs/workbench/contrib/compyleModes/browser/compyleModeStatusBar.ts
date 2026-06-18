@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Compyle. All rights reserved.
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -10,6 +10,7 @@ import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/w
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { COMPYLE_ACTIVE_MODE_SETTING, CompyleModeId } from '../common/compyleModes.js';
 import { COMPYLE_MODES } from '../common/compyleModesRegistry.js';
+import { ICompyleModeService } from './compyleModeService.js';
 
 const STATUS_BAR_ENTRY_ID = 'status.compyle.mode';
 
@@ -29,15 +30,14 @@ export class CompyleModeStatusBarContribution extends Disposable implements IWor
 		@IStatusbarService private readonly _statusbarService: IStatusbarService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@IWorkspaceContextService private readonly _contextService: IWorkspaceContextService,
+		@ICompyleModeService private readonly _modeService: ICompyleModeService,
 	) {
 		super();
 
 		this._updateStatusBarEntry();
 
-		this._register(this._configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(COMPYLE_ACTIVE_MODE_SETTING)) {
-				this._updateStatusBarEntry();
-			}
+		this._register(this._modeService.onDidChangeMode(() => {
+			this._updateStatusBarEntry();
 		}));
 
 		this._register(this._contextService.onDidChangeWorkbenchState(() => {

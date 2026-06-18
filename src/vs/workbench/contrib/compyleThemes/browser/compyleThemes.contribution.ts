@@ -1,14 +1,25 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Compyle. All rights reserved.
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IConfigurationRegistry, Extensions as ConfigurationExtensions, ConfigurationScope } from '../../../../platform/configuration/common/configurationRegistry.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
+import { EditorPaneDescriptor, IEditorPaneRegistry } from '../../../browser/editor.js';
+import { EditorExtensions, IEditorFactoryRegistry } from '../../../common/editor.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IWorkbenchThemeService } from '../../../services/themes/common/workbenchThemeService.js';
+import { CompyleThemeGalleryEditor } from './compyleThemeGallery.js';
+import { CompyleThemeGalleryInput, CompyleThemeGalleryInputSerializer } from './compyleThemeGalleryInput.js';
+
+// Side-effect import for the status bar contribution
+import './compyleThemeStatusBar.js';
 
 // ---------------------------------------------------------------------------
 // Settings
@@ -55,8 +66,30 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			description: localize('compyle.themes.favorites', "List of favorite theme IDs for quick switching and random-on-launch."),
 			scope: ConfigurationScope.APPLICATION,
 		},
+		'compyle.themes.showStatusBarEntry': {
+			type: 'boolean',
+			default: true,
+			description: localize('compyle.themes.showStatusBarEntry', "Show the current theme in the status bar with a quick link to the Theme Gallery."),
+			scope: ConfigurationScope.APPLICATION,
+		},
 	}
 });
+
+// ---------------------------------------------------------------------------
+// Theme Gallery editor
+// ---------------------------------------------------------------------------
+
+Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+	EditorPaneDescriptor.create(
+		CompyleThemeGalleryEditor,
+		CompyleThemeGalleryEditor.ID,
+		localize('compyleThemeGallery', "Theme Gallery"),
+	),
+	[new SyncDescriptor(CompyleThemeGalleryInput)],
+);
+
+Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
+	.registerEditorSerializer(CompyleThemeGalleryInput.ID, CompyleThemeGalleryInputSerializer);
 
 // ---------------------------------------------------------------------------
 // Theme categories for the Compyle Theme Gallery
@@ -141,9 +174,10 @@ class OpenThemeGalleryAction extends Action2 {
 	}
 
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const commandService = accessor.get(ICommandService);
-		// Opens the standard theme picker — Compyle Theme Gallery UI is a future enhancement
-		await commandService.executeCommand('workbench.action.selectTheme');
+		const editorService = accessor.get(IEditorService);
+		const instantiationService = accessor.get(IInstantiationService);
+		const input = instantiationService.createInstance(CompyleThemeGalleryInput);
+		await editorService.openEditor(input, { pinned: false });
 	}
 }
 
@@ -157,8 +191,25 @@ class RandomThemeAction extends Action2 {
 		});
 	}
 
-	override async run(_accessor: ServicesAccessor): Promise<void> {
-		// TODO: pick randomly from favorites or all installed themes
+	override async run(accessor: ServicesAccessor): Promise<void> {
+		const themeService = accessor.get(IWorkbenchThemeService);
+		const configurationService = accessor.get(IConfigurationService);
+
+		const favorites = configurationService.getValue<string[]>('compyle.themes.favorites') ?? [];
+		const allThemes = await themeService.getColorThemes();
+
+		// Prefer favorites; fall back to all installed themes.
+		const pool = favorites.length
+			? allThemes.filter(t => favorites.includes(t.settingsId))
+			: allThemes;
+		if (pool.length === 0) {
+			return;
+		}
+
+		const currentId = themeService.getColorTheme().settingsId;
+		const candidates = pool.length > 1 ? pool.filter(t => t.settingsId !== currentId) : pool;
+		const pick = candidates[Math.floor(Math.random() * candidates.length)];
+		await themeService.setColorTheme(pick.id, 'auto');
 	}
 }
 
@@ -172,11 +223,39 @@ class FavoriteCurrentThemeAction extends Action2 {
 		});
 	}
 
-	override async run(_accessor: ServicesAccessor): Promise<void> {
-		// TODO: add current workbench.colorTheme to compyle.themes.favorites
+	override async run(accessor: ServicesAccessor): Promise<void> {
+		const themeService = accessor.get(IWorkbenchThemeService);
+		const configurationService = accessor.get(IConfigurationService);
+		const notificationService = accessor.get(INotificationService);
+
+		const current = themeService.getColorTheme();
+		const favorites = configurationService.getValue<string[]>('compyle.themes.favorites') ?? [];
+		if (favorites.includes(current.settingsId)) {
+			notificationService.notify({ severity: Severity.Info, message: localize('compyle.themes.alreadyFavorite', "\"{0}\" is already in your favorites.", current.label) });
+			return;
+		}
+
+		await configurationService.updateValue('compyle.themes.favorites', [...favorites, current.settingsId]);
+		notificationService.notify({ severity: Severity.Info, message: localize('compyle.themes.addedFavorite', "Added \"{0}\" to your theme favorites.", current.label) });
 	}
 }
 
 registerAction2(OpenThemeGalleryAction);
 registerAction2(RandomThemeAction);
 registerAction2(FavoriteCurrentThemeAction);
+
+// ---------------------------------------------------------------------------
+// Menu entry points
+// ---------------------------------------------------------------------------
+
+// Surface the gallery at the top of the existing "Themes" submenu, which appears
+// both in the Manage gear menu (GlobalActivity) and the Preferences menu.
+const themesSubMenu = MenuId.for('ThemesSubMenu');
+
+MenuRegistry.appendMenuItem(themesSubMenu, {
+	command: {
+		id: 'compyle.themes.openGallery',
+		title: localize('compyle.themes.openGallery.menu', "Theme Gallery"),
+	},
+	order: 0,
+});

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Compyle. All rights reserved.
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -8,6 +8,7 @@ import { Action2, registerAction2 } from '../../../../platform/actions/common/ac
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IConfigurationRegistry, Extensions as ConfigurationExtensions, ConfigurationScope } from '../../../../platform/configuration/common/configurationRegistry.js';
+import { ICompyleModeService } from './compyleModeService.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
@@ -20,6 +21,10 @@ import './compyleModeWelcome.js';
 import { openCompyleModeQuickPick } from './compyleModeQuickPick.js';
 import {
 	initProjectMemory,
+	ensureFlowMemoryForRoot,
+	recordFlowActionForRoot,
+	getWorkspaceRoot,
+	getProjectName,
 	openProjectMemory,
 	updateProjectMemory,
 	generateHandoff,
@@ -27,10 +32,13 @@ import {
 	cleanProjectMemory,
 } from './compyleFlowMemory.js';
 import { detectConcepts, findConceptForError, ExplanationLevel, getExplanation } from './compyleTutorConcepts.js';
-import { IConfigurationService, ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
 import { IMarkerService, MarkerSeverity } from '../../../../platform/markers/common/markers.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { URI } from '../../../../base/common/uri.js';
 
 const COMPYLE_CATEGORY = { value: localize('compyle', "Compyle"), original: 'Compyle' };
 
@@ -155,14 +163,44 @@ registerAction2(class extends Action2 {
 		});
 	}
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const configService = accessor.get(IConfigurationService);
+		// Resolve every service synchronously up front: the accessor is only valid during
+		// the synchronous portion of run() and must not be used after the first await.
+		const modeService = accessor.get(ICompyleModeService);
 		const notificationService = accessor.get(INotificationService);
-		await configService.updateValue('compyle.modes.activeMode', 'flow');
-		notificationService.prompt(
-			Severity.Info,
-			'Compyle Flow is active. Set up project memory to keep context across AI sessions.',
-			[{ label: 'Initialize Project Memory', run: () => initProjectMemory(accessor) }],
-		);
+		const contextService = accessor.get(IWorkspaceContextService);
+		const fileService = accessor.get(IFileService);
+		const configurationService = accessor.get(IConfigurationService);
+		const isEmpty = contextService.getWorkbenchState() === WorkbenchState.EMPTY;
+
+		if (isEmpty) {
+			await modeService.switchMode('flow');
+			notificationService.notify({
+				severity: Severity.Warning,
+				message: localize('compyle.modes.flowNoFolder', "Compyle Flow is active. Open a folder to initialize .compyle/ memory automatically."),
+			});
+			return;
+		}
+
+		const root = getWorkspaceRoot(contextService);
+		const projectName = getProjectName(contextService);
+		const memoryEnabled = configurationService.getValue<boolean>('compyle.modes.memory.enabled') !== false;
+
+		await modeService.switchMode('flow');
+
+		if (root && memoryEnabled) {
+			await ensureFlowMemoryForRoot(fileService, root, projectName, { source: 'Start Flow Workspace' });
+			await recordFlowActionForRoot(fileService, root, projectName, {
+				title: 'Started Flow Workspace',
+				detail: 'Flow Mode is active and project memory is ready.',
+				status: 'active',
+				files: ['.compyle/PROJECT_MEMORY.md', '.compyle/CHANGELOG.md'],
+			});
+		}
+
+		notificationService.notify({
+			severity: Severity.Info,
+			message: localize('compyle.modes.flowReady', "Compyle Flow is active. Project memory is ready in .compyle/."),
+		});
 	}
 });
 
@@ -176,12 +214,12 @@ registerAction2(class extends Action2 {
 		});
 	}
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const configService = accessor.get(IConfigurationService);
+		const modeService = accessor.get(ICompyleModeService);
 		const notificationService = accessor.get(INotificationService);
-		await configService.updateValue('compyle.modes.activeMode', 'focus');
+		await modeService.switchMode('focus');
 		notificationService.notify({
 			severity: Severity.Info,
-			message: 'Compyle Focus is active. AI popups and memory prompts are off. Switch anytime from the status bar.',
+			message: localize('compyle.modes.focusReady', "Compyle Focus is active. AI and panels controlled by Focus settings. Switch anytime from the status bar."),
 		});
 	}
 });
@@ -196,12 +234,12 @@ registerAction2(class extends Action2 {
 		});
 	}
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const configService = accessor.get(IConfigurationService);
+		const modeService = accessor.get(ICompyleModeService);
 		const notificationService = accessor.get(INotificationService);
-		await configService.updateValue('compyle.modes.activeMode', 'tutor');
+		await modeService.switchMode('tutor');
 		notificationService.notify({
 			severity: Severity.Info,
-			message: 'Compyle Tutor is active. Select code and use "Compyle: Explain Selected Code" to learn about what you are writing.',
+			message: localize('compyle.modes.tutorReady', "Compyle Tutor is active. Select code and use \"Explain Selected Code\" to learn while you build."),
 		});
 	}
 });
@@ -216,22 +254,18 @@ registerAction2(class extends Action2 {
 		});
 	}
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const configService = accessor.get(IConfigurationService);
+		const modeService = accessor.get(ICompyleModeService);
 		const viewsService = accessor.get(IViewsService);
 		const notificationService = accessor.get(INotificationService);
-
-		await configService.updateValue('compyle.modes.activeMode', 'resolve');
-
-		// Open Problems panel
+		await modeService.switchMode('resolve');
 		try {
 			await viewsService.openView('workbench.panel.markers.view', false);
 		} catch {
 			// Panel may not be available in all configurations
 		}
-
 		notificationService.notify({
 			severity: Severity.Info,
-			message: 'Compyle Resolve is active. Use the Problems panel and "Compyle: Generate Bug Report" to diagnose issues.',
+			message: localize('compyle.modes.resolveReady', "Compyle Resolve is active. Use the Problems panel and \"Generate Bug Report\" to diagnose issues."),
 		});
 	}
 });
@@ -323,34 +357,30 @@ registerAction2(class extends Action2 {
 	override async run(accessor: ServicesAccessor): Promise<void> {
 		const contextService = accessor.get(IWorkspaceContextService);
 		const notificationService = accessor.get(INotificationService);
+		const fileService = accessor.get(IFileService);
+		const editorService = accessor.get(IEditorService);
 
 		if (contextService.getWorkbenchState() === WorkbenchState.EMPTY) {
 			notificationService.notify({ severity: Severity.Warning, message: 'Open a folder to summarize changes.' });
 			return;
 		}
 
-		// Open CHANGELOG.md via the memory helper (initializes if needed)
 		const folders = contextService.getWorkspace().folders;
 		if (!folders.length) { return; }
 
-		const { IFileService } = await import('../../../../platform/files/common/files.js');
-		const { IEditorService } = await import('../../../services/editor/common/editorService.js');
-		const { URI } = await import('../../../../base/common/uri.js');
-
+		const commandService = accessor.get(ICommandService);
 		const changelogUri = URI.joinPath(folders[0].uri, '.compyle', 'CHANGELOG.md');
-		const fileService = accessor.get(IFileService);
 		const exists = await fileService.exists(changelogUri);
 
 		if (!exists) {
 			notificationService.prompt(
 				Severity.Info,
 				'No CHANGELOG.md found. Initialize project memory first.',
-				[{ label: 'Initialize Memory', run: () => initProjectMemory(accessor) }],
+				[{ label: 'Initialize Memory', run: () => { void commandService.executeCommand('compyle.modes.initMemory'); } }],
 			);
 			return;
 		}
 
-		const editorService = accessor.get(IEditorService);
 		await editorService.openEditor({ resource: changelogUri });
 
 		notificationService.notify({

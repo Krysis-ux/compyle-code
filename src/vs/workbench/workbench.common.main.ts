@@ -469,16 +469,61 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 import './contrib/opener/browser/opener.contribution.js';
 
 // Compyle Workspace Experiences
+import './contrib/compyleModes/browser/compyleModeService.js';
 import './contrib/compyleModes/browser/compyleModes.contribution.js';
+
+// Compyle Router (model routing + quality gate)
+import './contrib/compyleRouter/browser/compyleRouter.contribution.js';
+
+// Compyle Skill Studio
+import './contrib/compyleSkillStudio/browser/compyleSkillStudio.contribution.js';
+
+// Compyle Converter (file conversion)
+import './contrib/compyleConverter/browser/compyleConverter.contribution.js';
 
 // Compyle Brain (AI)
 import './contrib/compyleBrain/browser/compyleBrain.contribution.js';
+import './contrib/compyleBrain/browser/compyleAgentMode.contribution.js';
 
 // Compyle Sounds
 import './contrib/compyleSounds/browser/compyleSounds.contribution.js';
 
 // Compyle Themes
 import './contrib/compyleThemes/browser/compyleThemes.contribution.js';
+import './contrib/compyleThemes/browser/compyleAppearance.contribution.js';
+
+// Compyle Run Doctor
+import './contrib/compyleRunDoctor/browser/compyleRunDoctor.contribution.js';
+
+// Compyle AI Terminal
+import './contrib/compyleAiTerminal/browser/compyleAiTerminal.contribution.js';
+
+// Compyle Transform Center
+import './contrib/compyleTransform/browser/compyleTransform.contribution.js';
+
+// Compyle Quality Guardian
+import './contrib/compyleQualityGuardian/browser/compyleQualityGuardian.contribution.js';
+
+// Compyle Project Starter Galaxy
+import './contrib/compyleStarter/browser/compyleStarter.contribution.js';
+
+// Compyle Home Dashboard
+import './contrib/compyleHome/browser/compyleHome.contribution.js';
+
+// Compyle Explain My Project
+import './contrib/compyleExplain/browser/compyleExplain.contribution.js';
+
+// Compyle Command Center
+import './contrib/compyleCommandCenter/browser/compyleCommandCenter.contribution.js';
+
+// Compyle Ship Center
+import './contrib/compyleShip/browser/compyleShip.contribution.js';
+
+// Compyle Live Preview
+import './contrib/compylePreview/browser/compylePreview.contribution.js';
+
+// Compyle Agent Control Center
+import './contrib/compyleAgent/browser/compyleAgent.contribution.js';
 
 // Compyle Extension Shield
 import './contrib/compyleExtensionShield/browser/compyleExtensionShield.contribution.js';
@@ -488,5 +533,27 @@ import './contrib/compylePerformance/browser/compylePerformance.contribution.js'
 
 // Compyle Spec-Driven Development
 import './contrib/compyleSpec/browser/compyleSpec.contribution.js';
+
+// Compyle Inline AI Edit (Ctrl+I)
+import './contrib/compyleInlineEdit/browser/compyleInlineEdit.contribution.js';
+
+// Compyle Fix with Brain (AI quick fix on diagnostics)
+import './contrib/compyleFixWithBrain/browser/compyleFixWithBrain.contribution.js';
+
+// Compyle Welcome (first-run setup)
+import './contrib/compyleWelcome/browser/compyleWelcome.contribution.js';
+
+// Compyle premium editor defaults
+import './contrib/compyleDefaults/browser/compyleDefaults.contribution.js';
+
+// Compyle AI selection actions (Explain / Comment / Refactor / Tests) + explorer file actions
+import './contrib/compyleSelectionActions/browser/compyleSelectionActions.contribution.js';
+import './contrib/compyleSelectionActions/browser/compyleExplorerActions.contribution.js';
+
+// Compyle AI commit messages (core command; UI lives in the compyle-git-ai extension)
+import './contrib/compyleCommitMessage/browser/compyleCommitMessage.contribution.js';
+
+// Compyle AI autocomplete (ghost-text inline completions)
+import './contrib/compyleAutocomplete/browser/compyleAutocomplete.contribution.js';
 
 //#endregion

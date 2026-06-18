@@ -1,0 +1,531 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.clm-root {
+	height: 100%;
+	box-sizing: border-box;
+	overflow-y: auto;
+	padding: 24px 28px 36px;
+	color: var(--vscode-foreground);
+	background: var(--vscode-editor-background);
+}
+
+.clm-header {
+	max-width: 760px;
+}
+
+.clm-title {
+	margin: 0;
+	font-size: 19px;
+	font-weight: 650;
+}
+
+.clm-subtitle {
+	margin-top: 6px;
+	font-size: 12.5px;
+	line-height: 1.5;
+	opacity: 0.72;
+}
+
+.clm-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 18px;
+}
+
+.clm-summary-item {
+	padding: 5px 9px;
+	border-radius: var(--compyle-radius, 6px);
+	background: color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
+	font-size: 12px;
+}
+
+.clm-status {
+	margin-top: 16px;
+	min-height: 30px;
+}
+
+.clm-status-row {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 10px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 12%, transparent);
+	font-size: 12.5px;
+}
+
+.clm-status-row.neutral {
+	color: var(--vscode-descriptionForeground);
+	background: color-mix(in srgb, var(--vscode-foreground) 7%, transparent);
+}
+
+.clm-status-row.ok {
+	color: var(--vscode-testing-iconPassed, #4caf50);
+	background: color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 12%, transparent);
+}
+
+.clm-status-row.error {
+	color: var(--vscode-editorWarning-foreground, #cca700);
+	background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 12%, transparent);
+}
+
+.clm-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 16px;
+	margin-top: 18px;
+	max-width: 1080px;
+}
+
+.clm-card {
+	padding: 16px;
+	border-radius: var(--compyle-radius, 8px);
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 13%, transparent);
+	background: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) 95%, transparent);
+}
+
+.clm-card.active {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 58%, transparent);
+}
+
+.clm-card-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.clm-card-title {
+	font-size: 15px;
+	font-weight: 650;
+}
+
+.clm-pill {
+	flex: 0 0 auto;
+	max-width: 132px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding: 3px 7px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 12%, transparent);
+	color: var(--vscode-descriptionForeground);
+	background: color-mix(in srgb, var(--vscode-foreground) 7%, transparent);
+	font-size: 10.5px;
+	font-weight: 650;
+}
+
+.clm-pill.connected {
+	color: var(--vscode-testing-iconPassed, #4caf50);
+	border-color: color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 38%, transparent);
+	background: color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 12%, transparent);
+}
+
+.clm-pill.not-running,
+.clm-pill.misconfigured {
+	color: var(--vscode-editorWarning-foreground, #cca700);
+	border-color: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 38%, transparent);
+	background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 12%, transparent);
+}
+
+.clm-pill.testing {
+	color: var(--vscode-progressBar-background, var(--vscode-focusBorder));
+	border-color: color-mix(in srgb, var(--vscode-progressBar-background, var(--vscode-focusBorder)) 42%, transparent);
+	background: color-mix(in srgb, var(--vscode-progressBar-background, var(--vscode-focusBorder)) 12%, transparent);
+}
+
+.clm-card-desc {
+	margin-top: 6px;
+	font-size: 12.5px;
+	line-height: 1.5;
+	opacity: 0.75;
+}
+
+.clm-card-meta {
+	margin-top: 8px;
+	font-size: 11.5px;
+	font-family: var(--monaco-monospace-font);
+	opacity: 0.7;
+	word-break: break-all;
+}
+
+.clm-card-status {
+	margin-top: 10px;
+	min-height: 32px;
+	font-size: 12px;
+	line-height: 1.45;
+	color: var(--vscode-descriptionForeground);
+}
+
+.clm-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 14px;
+	flex-wrap: wrap;
+}
+
+.clm-btn {
+	height: 30px;
+	padding: 0 12px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid var(--vscode-button-border, transparent);
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.clm-btn:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.clm-btn.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+}
+
+.clm-btn.primary:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.clm-btn.danger {
+	color: var(--vscode-errorForeground, #f14c4c);
+	border-color: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 32%, transparent);
+	background: transparent;
+}
+
+.clm-btn.danger:hover {
+	background: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 14%, transparent);
+}
+
+.clm-btn.small {
+	height: 24px;
+	padding: 0 8px;
+	font-size: 11.5px;
+}
+
+.clm-btn:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+/* ---- Sections ----------------------------------------------------------- */
+
+.clm-section {
+	margin-top: 24px;
+	max-width: 1080px;
+}
+
+.clm-section-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	font-weight: 650;
+	letter-spacing: 0.01em;
+	margin-bottom: 10px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+}
+
+.clm-count {
+	padding: 1px 7px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 650;
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 22%, transparent);
+}
+
+.clm-section-hint {
+	font-size: 12px;
+	line-height: 1.5;
+	opacity: 0.7;
+	margin: -4px 0 12px;
+}
+
+/* ---- Connection --------------------------------------------------------- */
+
+.clm-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 14px;
+}
+
+.clm-chip {
+	height: 28px;
+	padding: 0 14px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 16%, transparent);
+	background: transparent;
+	color: var(--vscode-foreground);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.clm-chip:hover {
+	background: color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
+}
+
+.clm-chip.active {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 16%, transparent);
+}
+
+.clm-input {
+	height: 30px;
+	flex: 1 1 auto;
+	min-width: 180px;
+	padding: 0 10px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid var(--vscode-input-border, color-mix(in srgb, var(--vscode-foreground) 16%, transparent));
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 12.5px;
+	font-family: var(--monaco-monospace-font);
+}
+
+.clm-input:focus {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.clm-input.small {
+	flex: 0 0 auto;
+	width: 120px;
+	min-width: 0;
+}
+
+.clm-filter {
+	width: 100%;
+	margin-bottom: 12px;
+	font-family: inherit;
+}
+
+/* ---- Option rows -------------------------------------------------------- */
+
+.clm-option-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 10px;
+	flex-wrap: wrap;
+}
+
+.clm-option-label {
+	flex: 0 0 auto;
+	width: 130px;
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.clm-option-hint {
+	flex: 1 1 200px;
+	font-size: 11.5px;
+	opacity: 0.65;
+	line-height: 1.4;
+}
+
+/* ---- Empty / error states ---------------------------------------------- */
+
+.clm-empty {
+	padding: 14px 16px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px dashed color-mix(in srgb, var(--vscode-foreground) 16%, transparent);
+	font-size: 12.5px;
+	line-height: 1.5;
+	color: var(--vscode-descriptionForeground);
+}
+
+.clm-empty.error {
+	border-style: solid;
+	color: var(--vscode-editorWarning-foreground, #cca700);
+	border-color: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 32%, transparent);
+	background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 8%, transparent);
+}
+
+/* ---- Installed models --------------------------------------------------- */
+
+.clm-model-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.clm-model-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 14px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 12%, transparent);
+	background: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) 95%, transparent);
+}
+
+.clm-model-row.active {
+	border-color: var(--compyle-accent, var(--vscode-focusBorder));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 48%, transparent);
+}
+
+.clm-model-name {
+	font-size: 13px;
+	font-weight: 600;
+	font-family: var(--monaco-monospace-font);
+}
+
+.clm-model-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 4px;
+	font-size: 11.5px;
+	opacity: 0.7;
+}
+
+.clm-model-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+
+.clm-tag {
+	padding: 3px 9px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 650;
+	color: var(--vscode-descriptionForeground);
+	background: color-mix(in srgb, var(--vscode-foreground) 9%, transparent);
+}
+
+.clm-tag.active {
+	color: var(--compyle-accent, var(--vscode-focusBorder));
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 16%, transparent);
+}
+
+/* ---- Catalog ------------------------------------------------------------ */
+
+.clm-catalog {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.clm-catalog-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	padding: 10px 14px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 11%, transparent);
+}
+
+.clm-catalog-info {
+	min-width: 0;
+}
+
+.clm-catalog-titlerow {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.clm-catalog-label {
+	font-size: 13px;
+	font-weight: 650;
+}
+
+.clm-catalog-name {
+	font-size: 11.5px;
+	font-family: var(--monaco-monospace-font);
+	opacity: 0.75;
+}
+
+.clm-catalog-size {
+	font-size: 11px;
+	opacity: 0.6;
+}
+
+.clm-catalog-desc {
+	margin-top: 4px;
+	font-size: 12px;
+	line-height: 1.45;
+	opacity: 0.72;
+}
+
+.clm-pull-row {
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+/* ---- Download progress -------------------------------------------------- */
+
+.clm-progress {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 0 0 auto;
+	min-width: 220px;
+}
+
+.clm-progress-track {
+	flex: 1 1 auto;
+	height: 6px;
+	border-radius: 999px;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--vscode-foreground) 14%, transparent);
+}
+
+.clm-progress-bar {
+	height: 100%;
+	width: 0;
+	border-radius: 999px;
+	background: var(--compyle-accent, var(--vscode-progressBar-background, var(--vscode-focusBorder)));
+	transition: width 120ms ease;
+}
+
+.clm-progress-label {
+	flex: 0 0 auto;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	opacity: 0.8;
+	min-width: 64px;
+}
+
+.clm-size-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0 12px;
+}
+
+.clm-size-chip {
+	padding: 4px 10px;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+	font-size: 11px;
+}
+
+.clm-size-chip:hover {
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.clm-size-chip.active {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}

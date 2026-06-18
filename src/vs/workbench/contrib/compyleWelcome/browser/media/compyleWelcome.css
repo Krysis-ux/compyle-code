@@ -1,0 +1,97 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.cw-root {
+	display: flex;
+	justify-content: center;
+	overflow-y: auto;
+}
+
+.cw-scroll {
+	width: 100%;
+	max-width: 640px;
+	padding: 56px 28px 40px;
+	box-sizing: border-box;
+}
+
+.cw-hero {
+	text-align: center;
+	margin-bottom: 36px;
+}
+
+.cw-logo {
+	font-size: 40px !important;
+	color: var(--compyle-accent, var(--vscode-focusBorder));
+	margin-bottom: 14px;
+	display: block;
+}
+
+.cw-title {
+	font-size: 26px;
+}
+
+.cw-tagline {
+	margin: 8px auto 0;
+}
+
+.cw-section {
+	margin-top: 30px;
+}
+
+.cw-looks {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.cw-look {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.cw-look-swatch {
+	width: 34px;
+	height: 34px;
+	border-radius: 8px;
+	flex-shrink: 0;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.cw-look-name {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cw-look-sub {
+	margin-top: 2px;
+	font-size: 12px;
+	opacity: 0.65;
+	line-height: 1.4;
+}
+
+.cw-ai {
+	border-radius: var(--compyle-radius, 8px);
+	border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.18));
+	padding: 16px;
+}
+
+.cw-ai-text {
+	font-size: 12.5px;
+	line-height: 1.55;
+	opacity: 0.8;
+	margin-bottom: 14px;
+}
+
+.cw-footer {
+	margin-top: 36px;
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.cw-start {
+	min-width: 120px;
+}

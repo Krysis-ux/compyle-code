@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Compyle. All rights reserved.
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -37,7 +37,8 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			default: 50,
 			minimum: 0,
 			maximum: 100,
-			description: localize('compyle.sounds.masterVolume', "Master volume for Compyle sound effects (0–100)."),
+			// allow-any-unicode-next-line
+				description: localize('compyle.sounds.masterVolume', "Master volume for Compyle sound effects (0–100)."),
 			scope: ConfigurationScope.APPLICATION,
 		},
 		'compyle.sounds.pack': {

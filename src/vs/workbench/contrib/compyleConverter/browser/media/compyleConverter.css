@@ -1,0 +1,141 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.cc-root {
+	height: 100%;
+	overflow: auto;
+	padding: 24px 28px 40px;
+	box-sizing: border-box;
+}
+
+.cc-title {
+	margin: 0 0 8px;
+	font-size: 22px;
+	font-weight: 600;
+}
+
+.cc-file {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.cc-file-name {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cc-file-ext {
+	font-size: 12px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--vscode-badge-background);
+	color: var(--vscode-badge-foreground);
+}
+
+.cc-convertx {
+	margin-left: auto;
+	padding: 6px 12px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 6px;
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.cc-convertx:hover {
+	background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Search */
+.cc-search {
+	margin-bottom: 12px;
+}
+
+.cc-search-input {
+	width: 100%;
+	max-width: 520px;
+	padding: 8px 12px;
+	border: 1px solid var(--vscode-input-border, transparent);
+	border-radius: 8px;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	font-size: 13px;
+	box-sizing: border-box;
+}
+
+/* Tabs */
+.cc-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 16px;
+}
+
+.cc-tab {
+	padding: 5px 12px;
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.cc-tab:hover {
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.cc-tab.active {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}
+
+/* Grid */
+.cc-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 10px;
+}
+
+.cc-chip {
+	border: 1px solid var(--vscode-widget-border, transparent);
+	border-radius: 10px;
+	background: var(--vscode-editorWidget-background);
+	padding: 12px 14px;
+	cursor: pointer;
+	transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.cc-chip:hover {
+	transform: translateY(-2px);
+	border-color: var(--vscode-focusBorder);
+}
+
+.cc-chip-ext {
+	font-size: 15px;
+	font-weight: 700;
+	font-family: var(--monaco-monospace-font);
+}
+
+.cc-chip-label {
+	margin-top: 2px;
+	font-size: 12px;
+}
+
+.cc-chip-tool {
+	margin-top: 6px;
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.cc-empty {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	padding: 16px 0;
+}

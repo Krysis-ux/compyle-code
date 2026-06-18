@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Compyle. All rights reserved.
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -62,7 +62,7 @@ export class CompyleModeWelcomeContribution extends Disposable implements IWorkb
 
 		this._notificationService.prompt(
 			Severity.Info,
-			'Choose your workspace experience — Compyle can shape the editor around how you want to work.',
+			'Choose your workspace experience - Compyle can shape the editor around how you want to work.',
 			[
 				{
 					label: 'Choose Now',
