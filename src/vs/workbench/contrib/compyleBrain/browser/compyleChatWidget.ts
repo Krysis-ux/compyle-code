@@ -32,6 +32,8 @@ import { ICompyleChatHistoryService } from './compyleChatHistoryService.js';
 import { ICompyleMemoryService } from './compyleMemoryService.js';
 import { ICompyleSkillService } from '../../compyleSkillStudio/browser/compyleSkillService.js';
 import { ICompyleSkill } from '../../compyleSkillStudio/common/compyleSkills.js';
+import { ICompyleRouterService } from '../../compyleRouter/browser/compyleRouterService.js';
+import { ICompyleRouterTrainingService } from './compyleRouterTrainingService.js';
 import { simpleLineDiff } from '../common/compyleDiff.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { COMPYLE_AGENT_MODE_SETTING, COMPYLE_AGENT_MODES } from '../common/compyleAgentModes.js';
@@ -92,8 +94,10 @@ export class CompyleChatWidget extends Disposable {
 	private _fullControlBtn!: HTMLButtonElement;
 	private _attachStrip!: HTMLElement;
 	private _skillStrip!: HTMLElement;
+	private _trainingBtn!: HTMLButtonElement;
 	private _pendingImages: { name: string; base64: string }[] = [];
 	private _activeSkills: { name: string; body: string }[] = [];
+	private _lastUserText = '';
 
 	/** Full conversation context sent to the model (user inputs, assistant replies, tool results). */
 	private readonly _context: IChatMessage[] = [];
@@ -116,6 +120,8 @@ export class CompyleChatWidget extends Disposable {
 		@ICompyleChatHistoryService private readonly _historyService: ICompyleChatHistoryService,
 		@ICompyleMemoryService private readonly _memoryService: ICompyleMemoryService,
 		@ICompyleSkillService private readonly _skillService: ICompyleSkillService,
+		@ICompyleRouterService private readonly _routerService: ICompyleRouterService,
+		@ICompyleRouterTrainingService private readonly _trainingService: ICompyleRouterTrainingService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
@@ -153,6 +159,9 @@ export class CompyleChatWidget extends Disposable {
 			}
 			if (e.affectsConfiguration('compyle.brain.agentEditing')) {
 				this._updateFullControlLabel();
+			}
+			if (e.affectsConfiguration('compyle.router.trainingEnabled') || e.affectsConfiguration('compyle.router.trainingTarget')) {
+				this._updateTrainingLabel();
 			}
 		}));
 		this._disposables.add(this._editorService.onDidActiveEditorChange(() => this._updateContextInfo()));
@@ -306,6 +315,10 @@ export class CompyleChatWidget extends Disposable {
 		append(createSkillBtn, $('span.codicon.codicon-sparkle'));
 		append(createSkillBtn, $('span', undefined, localize('compyleChat.createSkill', "Create Skill")));
 		this._disposables.add(addDisposableListener(createSkillBtn, 'click', () => this._createSkillFromChat()));
+
+		this._trainingBtn = append(toolbar, $('button.cpc-tool-btn')) as HTMLButtonElement;
+		this._updateTrainingLabel();
+		this._disposables.add(addDisposableListener(this._trainingBtn, 'click', () => this._toggleRouterTraining()));
 
 		const githubBtn = append(toolbar, $('button.cpc-tool-btn'));
 		append(githubBtn, $('span.codicon.codicon-github'));
@@ -463,6 +476,7 @@ export class CompyleChatWidget extends Disposable {
 		if (!text || this._busy) {
 			return;
 		}
+		this._lastUserText = text;
 
 		if (this._context.length === 0) {
 			clearNode(this._msgList);
@@ -574,7 +588,17 @@ export class CompyleChatWidget extends Disposable {
 			this._scrollToBottom();
 			this._scheduleSave();
 			if (lastFailure) {
-				await this._offerMistakeCapture(lastFailure);
+				const trainingEnabled = this._configurationService.getValue<boolean>('compyle.router.trainingEnabled') === true;
+				const trainingTarget = this._configurationService.getValue<string>('compyle.router.trainingTarget') || '';
+				if (trainingEnabled && trainingTarget) {
+					// Router training is on: silently learn a rule from the failure.
+					const rule = await this._trainingService.synthesizeFromFailure({ prompt: this._lastUserText, output: lastFailure, routerName: trainingTarget });
+					if (rule) {
+						this._appendStatusRow('codicon-git-merge', localize('compyleChat.trainedRule', "Router training: added rule \"{0}\" to {1}", rule.name, trainingTarget));
+					}
+				} else {
+					await this._offerMistakeCapture(lastFailure);
+				}
 			}
 		} catch (err: unknown) {
 			typing.remove();
@@ -901,13 +925,87 @@ export class CompyleChatWidget extends Disposable {
 		const choice = await this._quickInputService.pick(
 			[
 				{ label: localize('compyleChat.saveMistakeMem', "Save this mistake to long-term memory"), id: 'mem' },
+				{ label: localize('compyleChat.saveMistakeRouter', "Create a router rule so it does not happen again"), id: 'router' },
 				{ label: localize('compyleChat.ignoreMistake', "Ignore"), id: 'no' },
 			],
 			{ placeHolder: localize('compyleChat.mistakeQ', "The last run reported an error. Remember it so it does not happen again?") },
 		);
 		if (choice?.id === 'mem') {
 			await this._addToMemory(`Mistake to avoid — this error occurred during a run: ${output.slice(0, 600)}`);
+		} else if (choice?.id === 'router') {
+			await this._synthesizeRouterRule(this._lastUserText, output);
 		}
+	}
+
+	// ---- Router training --------------------------------------------------
+
+	private _updateTrainingLabel(): void {
+		if (!this._trainingBtn) {
+			return;
+		}
+		const enabled = this._configurationService.getValue<boolean>('compyle.router.trainingEnabled') === true;
+		const target = this._configurationService.getValue<string>('compyle.router.trainingTarget') || '';
+		clearNode(this._trainingBtn);
+		append(this._trainingBtn, $(`span.codicon.${enabled ? 'codicon-debug-rerun' : 'codicon-git-merge'}`));
+		append(this._trainingBtn, $('span', undefined, enabled
+			? localize('compyleChat.trainingOn', "Training: {0}", target || '?')
+			: localize('compyleChat.routerTraining', "Router Training")));
+		this._trainingBtn.classList.toggle('active', enabled);
+	}
+
+	private async _pickTrainingRouter(): Promise<string | undefined> {
+		const routers = await this._routerService.listRouters();
+		type RouterPick = IQuickPickItem & { newRouter?: boolean; routerName?: string };
+		const items: (RouterPick | IQuickPickSeparator)[] = [{ label: localize('compyleChat.newRouter', "Create new router…"), newRouter: true }];
+		if (routers.length) {
+			items.push({ type: 'separator', label: localize('compyleChat.existingRouters', "Existing routers") });
+			for (const r of routers) {
+				items.push({ label: r, routerName: r });
+			}
+		}
+		const picked = await this._quickInputService.pick(items, { placeHolder: localize('compyleChat.pickRouter', "Where should Compyle AI save what it learns?") });
+		if (!picked) {
+			return undefined;
+		}
+		if (picked.newRouter) {
+			const name = await this._quickInputService.input({ title: localize('compyleChat.routerName', "New router name"), placeHolder: localize('compyleChat.routerNamePh', "e.g. general-coding") });
+			if (!name) {
+				return undefined;
+			}
+			await this._routerService.createRouter(name);
+			return name;
+		}
+		return picked.routerName;
+	}
+
+	private async _toggleRouterTraining(): Promise<void> {
+		const enabled = this._configurationService.getValue<boolean>('compyle.router.trainingEnabled') === true;
+		if (enabled) {
+			await this._configurationService.updateValue('compyle.router.trainingEnabled', false);
+			this._notificationService.info(localize('compyleChat.trainingOff', "Router training is off."));
+			return;
+		}
+		const target = await this._pickTrainingRouter();
+		if (!target) {
+			return;
+		}
+		await this._configurationService.updateValue('compyle.router.trainingTarget', target);
+		await this._configurationService.updateValue('compyle.router.trainingEnabled', true);
+		this._notificationService.info(localize('compyleChat.trainingStarted', "Router training on — Compyle AI will learn from its mistakes into \"{0}\".", target));
+	}
+
+	private async _synthesizeRouterRule(prompt: string, output: string): Promise<string | undefined> {
+		const target = await this._pickTrainingRouter();
+		if (!target) {
+			return undefined;
+		}
+		const rule = await this._trainingService.synthesizeFromFailure({ prompt, output, routerName: target });
+		if (rule) {
+			this._notificationService.info(localize('compyleChat.ruleAdded', "Added rule \"{0}\" to router \"{1}\".", rule.name, target));
+			return target;
+		}
+		this._notificationService.warn(localize('compyleChat.ruleFailed', "Could not synthesize a router rule from that failure."));
+		return undefined;
 	}
 
 	// ---- Project / file context ------------------------------------------

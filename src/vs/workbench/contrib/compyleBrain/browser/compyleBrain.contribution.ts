@@ -31,6 +31,7 @@ import { CompyleChatViewPane } from './compyleChatViewPane.js';
 import './compyleAgentService.js';
 import './compyleChatHistoryService.js';
 import './compyleMemoryService.js';
+import './compyleRouterTrainingService.js';
 
 // ---------------------------------------------------------------------------
 // Settings registration
@@ -166,6 +167,18 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			default: {},
 			description: localize('compyle.brain.skillPresets', "Named sets of skills to enable together in Compyle AI."),
 			scope: ConfigurationScope.APPLICATION,
+		},
+		'compyle.router.trainingEnabled': {
+			type: 'boolean',
+			default: false,
+			description: localize('compyle.router.trainingEnabled', "When on, every mistake Compyle AI makes is turned into a routing rule and saved to the training router."),
+			scope: ConfigurationScope.RESOURCE,
+		},
+		'compyle.router.trainingTarget': {
+			type: 'string',
+			default: '',
+			description: localize('compyle.router.trainingTarget', "Name of the router that Router Training mode learns into (under .compyle/routers/)."),
+			scope: ConfigurationScope.RESOURCE,
 		},
 	}
 });
