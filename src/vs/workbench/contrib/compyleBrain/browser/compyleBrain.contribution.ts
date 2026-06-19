@@ -30,6 +30,7 @@ import { CompyleChatInput, CompyleChatInputSerializer } from './compyleChatInput
 import { CompyleChatViewPane } from './compyleChatViewPane.js';
 import './compyleAgentService.js';
 import './compyleChatHistoryService.js';
+import './compyleMemoryService.js';
 
 // ---------------------------------------------------------------------------
 // Settings registration

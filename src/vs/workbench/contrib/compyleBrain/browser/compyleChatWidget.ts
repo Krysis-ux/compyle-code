@@ -29,6 +29,7 @@ import { CompyleBrainProvider } from '../common/compyleBrain.js';
 import { ICompyleBrainService, ICompyleChatMessage } from './compyleBrainService.js';
 import { ICompyleAgentService, ICompyleAgentEvent } from './compyleAgentService.js';
 import { ICompyleChatHistoryService } from './compyleChatHistoryService.js';
+import { ICompyleMemoryService } from './compyleMemoryService.js';
 import { ICompyleSkillService } from '../../compyleSkillStudio/browser/compyleSkillService.js';
 import { ICompyleSkill } from '../../compyleSkillStudio/common/compyleSkills.js';
 import { simpleLineDiff } from '../common/compyleDiff.js';
@@ -49,6 +50,11 @@ interface IChatMessage {
 /** Model families known to accept images via Ollama's /api/chat. */
 const VISION_MODEL_HINTS = ['llava', 'llama3.2-vision', 'llama-3.2-vision', 'bakllava', 'moondream', 'minicpm-v', 'qwen2-vl', 'qwen2.5-vl'];
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'];
+
+/** Heuristic for spotting a failed command run so we can offer to remember the mistake. */
+function looksLikeFailure(output: string): boolean {
+	return /\b(error|exception|traceback|failed|failure|not found|cannot find|undefined is not|syntaxerror|cannot read|enoent)\b/i.test(output);
+}
 
 interface IGitHubRepo {
 	full_name: string;
@@ -108,6 +114,7 @@ export class CompyleChatWidget extends Disposable {
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
 		@ICompyleAgentService private readonly _agentService: ICompyleAgentService,
 		@ICompyleChatHistoryService private readonly _historyService: ICompyleChatHistoryService,
+		@ICompyleMemoryService private readonly _memoryService: ICompyleMemoryService,
 		@ICompyleSkillService private readonly _skillService: ICompyleSkillService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
@@ -399,10 +406,20 @@ export class CompyleChatWidget extends Disposable {
 		append(empty, $('p.cpc-empty-hint', undefined, localize('compyleChat.emptyHint', "Pick a local model above and ask anything. Compyle AI can see your open files and project — ask it to explain, fix, or extend your code.")));
 	}
 
-	private _appendBubble(role: 'user' | 'assistant', content: string): HTMLElement {
+	/** Create a message shell with a role row + "add to memory" action. `getContent` reads the message text lazily. */
+	private _createBubbleShell(role: 'user' | 'assistant', getContent: () => string): HTMLElement {
 		const wrap = append(this._msgList, $(`.cpc-msg.${role}`));
-		append(wrap, $('span.cpc-msg-role', undefined, role === 'user' ? localize('compyleChat.you', "You") : localize('compyleChat.ai', "Compyle AI")));
-		const bubble = append(wrap, $('.cpc-bubble'));
+		const roleRow = append(wrap, $('.cpc-msg-role-row'));
+		append(roleRow, $('span.cpc-msg-role', undefined, role === 'user' ? localize('compyleChat.you', "You") : localize('compyleChat.ai', "Compyle AI")));
+		const memBtn = append(roleRow, $('button.cpc-msg-action')) as HTMLButtonElement;
+		append(memBtn, $('span.codicon.codicon-bookmark'));
+		memBtn.title = localize('compyleChat.addMemory', "Add to long-term memory");
+		this._disposables.add(addDisposableListener(memBtn, 'click', () => this._addToMemory(getContent())));
+		return append(wrap, $('.cpc-bubble'));
+	}
+
+	private _appendBubble(role: 'user' | 'assistant', content: string): HTMLElement {
+		const bubble = this._createBubbleShell(role, () => content);
 		if (role === 'assistant') {
 			this._disposables.add(this._renderMarkdownInto(bubble, content));
 		} else {
@@ -471,11 +488,16 @@ export class CompyleChatWidget extends Disposable {
 
 		// Per-turn live-render state for the streaming assistant bubble(s).
 		let liveBubble: HTMLElement | undefined;
+		let liveHolder: { text: string } | undefined;
 		let liveBuffer = '';
 		let liveRender: IDisposable | undefined;
 		let renderScheduled = false;
+		let lastFailure: string | undefined;
 		const reRender = () => {
 			if (liveBubble) {
+				if (liveHolder) {
+					liveHolder.text = liveBuffer;
+				}
 				liveRender?.dispose();
 				liveRender = this._renderMarkdownInto(liveBubble, liveBuffer);
 				this._scrollToBottom();
@@ -484,20 +506,23 @@ export class CompyleChatWidget extends Disposable {
 		const ensureLiveBubble = () => {
 			typing.remove();
 			if (!liveBubble) {
-				const wrap = append(this._msgList, $('.cpc-msg.assistant'));
-				append(wrap, $('span.cpc-msg-role', undefined, localize('compyleChat.ai', "Compyle AI")));
-				liveBubble = append(wrap, $('.cpc-bubble'));
+				liveHolder = { text: '' };
+				liveBubble = this._createBubbleShell('assistant', () => liveHolder?.text ?? '');
 				liveBuffer = '';
 			}
 		};
 		const sealLiveBubble = (finalText: string) => {
 			if (liveBubble) {
 				liveBuffer = finalText;
+				if (liveHolder) {
+					liveHolder.text = finalText;
+				}
 				liveRender?.dispose();
 				liveRender = this._renderMarkdownInto(liveBubble, liveBuffer);
 				this._disposables.add(liveRender);
 			}
 			liveBubble = undefined;
+			liveHolder = undefined;
 			liveRender = undefined;
 			liveBuffer = '';
 			renderScheduled = false;
@@ -530,6 +555,9 @@ export class CompyleChatWidget extends Disposable {
 					break;
 				case 'run-output':
 					this._appendStatusRow('codicon-terminal', localize('compyleChat.ranCommand', "Ran: {0}", e.command));
+					if (looksLikeFailure(e.output)) {
+						lastFailure = e.output;
+					}
 					break;
 				case 'error':
 					this._appendStatusRow('codicon-warning', e.message);
@@ -545,6 +573,9 @@ export class CompyleChatWidget extends Disposable {
 			typing.remove();
 			this._scrollToBottom();
 			this._scheduleSave();
+			if (lastFailure) {
+				await this._offerMistakeCapture(lastFailure);
+			}
 		} catch (err: unknown) {
 			typing.remove();
 			sealLiveBubble(liveBuffer);
@@ -840,6 +871,45 @@ export class CompyleChatWidget extends Disposable {
 		}
 	}
 
+	// ---- Long-term memory -------------------------------------------------
+
+	private async _addToMemory(text: string): Promise<void> {
+		if (!text.trim()) {
+			return;
+		}
+		this._notificationService.info(localize('compyleChat.savingMemory', "Saving to long-term memory…"));
+		let fact = text.trim();
+		try {
+			if (this._brainService.isConfigured()) {
+				const reply = await this._brainService.chat(
+					[{ role: 'user', content: `Summarize the following as one concise fact to remember. Reply with the single sentence only, no preamble:\n\n${text.slice(0, 2000)}` }],
+					{ maxTokens: 80, silent: true },
+				);
+				const firstLine = reply.trim().split('\n')[0];
+				if (firstLine) {
+					fact = firstLine;
+				}
+			}
+		} catch {
+			// Fall back to the raw text when distillation fails.
+		}
+		await this._memoryService.append(fact);
+		this._notificationService.info(localize('compyleChat.savedMemory', "Added to long-term memory."));
+	}
+
+	private async _offerMistakeCapture(output: string): Promise<void> {
+		const choice = await this._quickInputService.pick(
+			[
+				{ label: localize('compyleChat.saveMistakeMem', "Save this mistake to long-term memory"), id: 'mem' },
+				{ label: localize('compyleChat.ignoreMistake', "Ignore"), id: 'no' },
+			],
+			{ placeHolder: localize('compyleChat.mistakeQ', "The last run reported an error. Remember it so it does not happen again?") },
+		);
+		if (choice?.id === 'mem') {
+			await this._addToMemory(`Mistake to avoid — this error occurred during a run: ${output.slice(0, 600)}`);
+		}
+	}
+
 	// ---- Project / file context ------------------------------------------
 
 	private _updateContextToggleLabel(): void {
@@ -878,6 +948,11 @@ export class CompyleChatWidget extends Disposable {
 	/** Build a context string describing the workspace, open files, and active file. */
 	private async _gatherWorkspaceContext(): Promise<string> {
 		const parts: string[] = [];
+
+		const memory = await this._memoryService.read();
+		if (memory.trim()) {
+			parts.push(`# Long-term memory (facts to remember)\n${memory.slice(-4000)}`);
+		}
 
 		const folders = this._workspaceContextService.getWorkspace().folders;
 		if (folders.length > 0) {
