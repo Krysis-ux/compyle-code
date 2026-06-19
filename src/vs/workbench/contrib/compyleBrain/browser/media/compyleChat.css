@@ -551,3 +551,103 @@
 	font-size: 11.5px;
 	padding: 0 8px;
 }
+
+.cpc-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.cpc-btn .codicon {
+	font-size: 13px;
+}
+
+.cpc-btn.active {
+	border-color: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 55%, transparent);
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 16%, transparent);
+	color: var(--vscode-foreground);
+}
+
+/* ---- Agent status rows + diff cards ----------------------------------- */
+
+.cpc-status-row {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	max-width: 92%;
+	padding: 4px 10px;
+	border-radius: 8px;
+	font-size: 11.5px;
+	color: var(--vscode-descriptionForeground);
+	background: color-mix(in srgb, var(--vscode-foreground) 6%, transparent);
+}
+
+.cpc-status-row .codicon {
+	font-size: 13px;
+}
+
+.cpc-diff {
+	align-self: stretch;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 35%, transparent);
+	border-radius: 10px;
+	overflow: hidden;
+	background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+}
+
+.cpc-diff-head {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	padding: 7px 12px;
+	border-bottom: 1px solid color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+	font-size: 12px;
+}
+
+.cpc-diff-head .codicon {
+	color: var(--compyle-accent, var(--vscode-focusBorder));
+}
+
+.cpc-diff-path {
+	font-family: var(--monaco-monospace-font);
+	font-weight: 600;
+}
+
+.cpc-diff-body {
+	max-height: 280px;
+	overflow: auto;
+	padding: 6px 0;
+	font-family: var(--monaco-monospace-font);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.cpc-diff-line {
+	padding: 0 12px;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.cpc-diff-line.add {
+	background: color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 16%, transparent);
+}
+
+.cpc-diff-line.del {
+	background: color-mix(in srgb, var(--vscode-editorError-foreground, #f44747) 14%, transparent);
+}
+
+.cpc-diff-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border-top: 1px solid color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+}
+
+.cpc-diff-settled {
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--vscode-descriptionForeground);
+}

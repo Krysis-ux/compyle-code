@@ -25,6 +25,8 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { ITerminalService, ITerminalGroupService } from '../../terminal/browser/terminal.js';
 import { CompyleBrainProvider } from '../common/compyleBrain.js';
 import { ICompyleBrainService, ICompyleChatMessage } from './compyleBrainService.js';
+import { ICompyleAgentService, ICompyleAgentEvent } from './compyleAgentService.js';
+import { simpleLineDiff } from '../common/compyleDiff.js';
 import { COMPYLE_AGENT_MODE_SETTING, COMPYLE_AGENT_MODES } from '../common/compyleAgentModes.js';
 
 interface IContextItem {
@@ -70,8 +72,12 @@ export class CompyleChatWidget extends Disposable {
 	private _textarea!: HTMLTextAreaElement;
 	private _sendBtn!: HTMLButtonElement;
 	private _contextToggle!: HTMLButtonElement;
+	private _fullControlBtn!: HTMLButtonElement;
 
-	private readonly _history: IChatMessage[] = [];
+	/** Full conversation context sent to the model (user inputs, assistant replies, tool results). */
+	private readonly _context: IChatMessage[] = [];
+	/** The user-visible turns (real user inputs + assistant replies), used for re-render and history. */
+	private readonly _visible: IChatMessage[] = [];
 	private readonly _contextItems: IContextItem[] = [];
 	private _useProjectContext = true;
 	private _busy = false;
@@ -83,6 +89,7 @@ export class CompyleChatWidget extends Disposable {
 
 	constructor(
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
+		@ICompyleAgentService private readonly _agentService: ICompyleAgentService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
@@ -116,6 +123,9 @@ export class CompyleChatWidget extends Disposable {
 		this._disposables.add(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(COMPYLE_AGENT_MODE_SETTING)) {
 				this._refreshModeSelect();
+			}
+			if (e.affectsConfiguration('compyle.brain.agentEditing')) {
+				this._updateFullControlLabel();
 			}
 		}));
 		this._disposables.add(this._editorService.onDidActiveEditorChange(() => this._updateContextInfo()));
@@ -173,6 +183,13 @@ export class CompyleChatWidget extends Disposable {
 		this._modeSelect.value = currentMode;
 		this._disposables.add(addDisposableListener(this._modeSelect, 'change', () => {
 			this._configurationService.updateValue(COMPYLE_AGENT_MODE_SETTING, this._modeSelect.value);
+		}));
+
+		this._fullControlBtn = append(right, $('button.cpc-btn.small')) as HTMLButtonElement;
+		this._updateFullControlLabel();
+		this._disposables.add(addDisposableListener(this._fullControlBtn, 'click', () => {
+			const auto = this._configurationService.getValue<string>('compyle.brain.agentEditing') === 'auto';
+			this._configurationService.updateValue('compyle.brain.agentEditing', auto ? 'approve' : 'auto');
 		}));
 
 		const clearBtn = append(right, $('button.cpc-btn.small', undefined, localize('compyleChat.clear', "Clear")));
@@ -322,11 +339,12 @@ export class CompyleChatWidget extends Disposable {
 			return;
 		}
 
-		if (this._history.length === 0) {
+		if (this._context.length === 0) {
 			clearNode(this._msgList);
 		}
 
-		this._history.push({ role: 'user', content: text });
+		this._context.push({ role: 'user', content: text });
+		this._visible.push({ role: 'user', content: text });
 		this._appendBubble('user', text);
 		this._textarea.value = '';
 		this._textarea.style.height = 'auto';
@@ -335,42 +353,86 @@ export class CompyleChatWidget extends Disposable {
 
 		const typing = this._appendTypingIndicator();
 
+		// Per-turn live-render state for the streaming assistant bubble(s).
+		let liveBubble: HTMLElement | undefined;
+		let liveBuffer = '';
+		let liveRender: IDisposable | undefined;
+		let renderScheduled = false;
+		const reRender = () => {
+			if (liveBubble) {
+				liveRender?.dispose();
+				liveRender = this._renderMarkdownInto(liveBubble, liveBuffer);
+				this._scrollToBottom();
+			}
+		};
+		const ensureLiveBubble = () => {
+			typing.remove();
+			if (!liveBubble) {
+				const wrap = append(this._msgList, $('.cpc-msg.assistant'));
+				append(wrap, $('span.cpc-msg-role', undefined, localize('compyleChat.ai', "Compyle AI")));
+				liveBubble = append(wrap, $('.cpc-bubble'));
+				liveBuffer = '';
+			}
+		};
+		const sealLiveBubble = (finalText: string) => {
+			if (liveBubble) {
+				liveBuffer = finalText;
+				liveRender?.dispose();
+				liveRender = this._renderMarkdownInto(liveBubble, liveBuffer);
+				this._disposables.add(liveRender);
+			}
+			liveBubble = undefined;
+			liveRender = undefined;
+			liveBuffer = '';
+			renderScheduled = false;
+		};
+
+		const onEvent = (e: ICompyleAgentEvent): void => {
+			switch (e.type) {
+				case 'token':
+					ensureLiveBubble();
+					liveBuffer += e.delta;
+					if (!renderScheduled) {
+						renderScheduled = true;
+						setTimeout(() => { renderScheduled = false; reRender(); }, 80);
+					}
+					break;
+				case 'assistant-done':
+					sealLiveBubble(e.text);
+					if (e.text.trim()) {
+						this._visible.push({ role: 'assistant', content: e.text });
+					}
+					break;
+				case 'diff':
+					this._appendDiffCard(e.path, e.original, e.modified, e.accept, e.reject);
+					break;
+				case 'applied':
+					this._appendStatusRow('codicon-check', localize('compyleChat.appliedEdit', "Applied edit to {0}", e.path));
+					break;
+				case 'rejected':
+					this._appendStatusRow('codicon-close', localize('compyleChat.rejectedEdit', "Rejected edit to {0}", e.path));
+					break;
+				case 'run-output':
+					this._appendStatusRow('codicon-terminal', localize('compyleChat.ranCommand', "Ran: {0}", e.command));
+					break;
+				case 'error':
+					this._appendStatusRow('codicon-warning', e.message);
+					break;
+			}
+		};
+
 		this._busyCts = new CancellationTokenSource();
 		try {
-			const messages: ICompyleChatMessage[] = [];
-
-			// Inject automatic project context + any pinned context (e.g. GitHub READMEs)
-			// as an opening user/assistant exchange so the model treats it as established.
-			const contextBlocks: string[] = [];
-			if (this._useProjectContext) {
-				const projectContext = await this._gatherWorkspaceContext();
-				if (projectContext) {
-					contextBlocks.push(projectContext);
-				}
-			}
-			for (const item of this._contextItems) {
-				contextBlocks.push(`[${item.label}]\n${item.content}`);
-			}
-			if (contextBlocks.length > 0) {
-				messages.push({ role: 'user', content: `Context for this conversation — the user's open project and files:\n\n${contextBlocks.join('\n\n---\n\n')}` });
-				messages.push({ role: 'assistant', content: 'Understood. I can see your project and the files you have open, and I will use them to help.' });
-			}
-
-			for (const m of this._history.slice(0, -1)) {
-				messages.push({ role: m.role, content: m.content });
-			}
-			messages.push({ role: 'user', content: text });
-
-			const reply = await this._brainService.chat(messages, { silent: false }, this._busyCts.token);
-			this._history.push({ role: 'assistant', content: reply });
+			const messages = await this._buildAgentMessages();
+			const result = await this._agentService.run(messages, onEvent, this._busyCts.token);
+			this._context.push(...result.transcriptAdditions);
 			typing.remove();
-			this._appendBubble('assistant', reply);
 			this._scrollToBottom();
 		} catch (err: unknown) {
 			typing.remove();
+			sealLiveBubble(liveBuffer);
 			const errMsg = err instanceof Error ? err.message : String(err);
-			this._history.push({ role: 'assistant', content: `⚠ ${errMsg}` });
-			this._appendBubble('assistant', `⚠ ${errMsg}`);
+			this._appendStatusRow('codicon-warning', errMsg);
 			this._scrollToBottom();
 		} finally {
 			this._busyCts?.dispose();
@@ -381,8 +443,69 @@ export class CompyleChatWidget extends Disposable {
 		}
 	}
 
+	/** Build the message list for the agent: ephemeral project/context preamble + the conversation so far. */
+	private async _buildAgentMessages(): Promise<ICompyleChatMessage[]> {
+		const messages: ICompyleChatMessage[] = [];
+		const contextBlocks: string[] = [];
+		if (this._useProjectContext) {
+			const projectContext = await this._gatherWorkspaceContext();
+			if (projectContext) {
+				contextBlocks.push(projectContext);
+			}
+		}
+		for (const item of this._contextItems) {
+			contextBlocks.push(`[${item.label}]\n${item.content}`);
+		}
+		if (contextBlocks.length > 0) {
+			messages.push({ role: 'user', content: `Context for this conversation — the user's open project and files:\n\n${contextBlocks.join('\n\n---\n\n')}` });
+			messages.push({ role: 'assistant', content: 'Understood. I can see your project and the files you have open, and I will use them to help.' });
+		}
+		for (const m of this._context) {
+			messages.push({ role: m.role, content: m.content });
+		}
+		return messages;
+	}
+
+	private _appendStatusRow(codicon: string, text: string): void {
+		const row = append(this._msgList, $('.cpc-status-row'));
+		append(row, $(`span.codicon.${codicon}`));
+		append(row, $('span', undefined, text));
+		this._scrollToBottom();
+	}
+
+	private _appendDiffCard(path: string, original: string, modified: string, accept: () => void, reject: () => void): void {
+		const card = append(this._msgList, $('.cpc-diff'));
+		const head = append(card, $('.cpc-diff-head'));
+		append(head, $('span.codicon.codicon-diff-single'));
+		append(head, $('span.cpc-diff-path', undefined, path));
+
+		const body = append(card, $('.cpc-diff-body'));
+		const { removed, added } = simpleLineDiff(original, modified);
+		for (const line of removed) {
+			append(body, $('.cpc-diff-line.del', undefined, `- ${line}`));
+		}
+		for (const line of added) {
+			append(body, $('.cpc-diff-line.add', undefined, `+ ${line}`));
+		}
+
+		const actions = append(card, $('.cpc-diff-actions'));
+		const applyBtn = append(actions, $('button.cpc-btn.primary.small', undefined, localize('compyleChat.apply', "Apply"))) as HTMLButtonElement;
+		const rejectBtn = append(actions, $('button.cpc-btn.small', undefined, localize('compyleChat.reject', "Reject"))) as HTMLButtonElement;
+		const settle = (decision: () => void, label: string) => {
+			applyBtn.disabled = true;
+			rejectBtn.disabled = true;
+			clearNode(actions);
+			append(actions, $('span.cpc-diff-settled', undefined, label));
+			decision();
+		};
+		this._disposables.add(addDisposableListener(applyBtn, 'click', () => settle(accept, localize('compyleChat.applied', "Applied"))));
+		this._disposables.add(addDisposableListener(rejectBtn, 'click', () => settle(reject, localize('compyleChat.rejected', "Rejected"))));
+		this._scrollToBottom();
+	}
+
 	private _clearHistory(): void {
-		this._history.length = 0;
+		this._context.length = 0;
+		this._visible.length = 0;
 		this._renderEmptyState();
 	}
 
@@ -527,6 +650,22 @@ export class CompyleChatWidget extends Disposable {
 		if (this._modeSelect) {
 			this._modeSelect.value = currentMode;
 		}
+	}
+
+	private _updateFullControlLabel(): void {
+		if (!this._fullControlBtn) {
+			return;
+		}
+		const auto = this._configurationService.getValue<string>('compyle.brain.agentEditing') === 'auto';
+		clearNode(this._fullControlBtn);
+		append(this._fullControlBtn, $(`span.codicon.${auto ? 'codicon-unlock' : 'codicon-lock'}`));
+		append(this._fullControlBtn, $('span', undefined, auto
+			? localize('compyleChat.fullControlOn', "Full control")
+			: localize('compyleChat.approveEdits', "Approve edits")));
+		this._fullControlBtn.classList.toggle('active', auto);
+		this._fullControlBtn.title = auto
+			? localize('compyleChat.fullControlTooltip', "Compyle AI applies edits and runs commands automatically. Click to require approval.")
+			: localize('compyleChat.approveTooltip', "Compyle AI shows a diff and waits for approval before editing. Click for full control.");
 	}
 
 	// ---- Ollama startup ---------------------------------------------------
