@@ -9,9 +9,11 @@ import { CancellationTokenSource } from '../../../../base/common/cancellation.js
 import { Disposable, DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
 import { timeout } from '../../../../base/common/async.js';
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
+import { encodeBase64 } from '../../../../base/common/buffer.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
@@ -37,7 +39,12 @@ interface IContextItem {
 interface IChatMessage {
 	readonly role: 'user' | 'assistant';
 	readonly content: string;
+	readonly images?: readonly string[];
 }
+
+/** Model families known to accept images via Ollama's /api/chat. */
+const VISION_MODEL_HINTS = ['llava', 'llama3.2-vision', 'llama-3.2-vision', 'bakllava', 'moondream', 'minicpm-v', 'qwen2-vl', 'qwen2.5-vl'];
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'];
 
 interface IGitHubRepo {
 	full_name: string;
@@ -73,6 +80,8 @@ export class CompyleChatWidget extends Disposable {
 	private _sendBtn!: HTMLButtonElement;
 	private _contextToggle!: HTMLButtonElement;
 	private _fullControlBtn!: HTMLButtonElement;
+	private _attachStrip!: HTMLElement;
+	private _pendingImages: { name: string; base64: string }[] = [];
 
 	/** Full conversation context sent to the model (user inputs, assistant replies, tool results). */
 	private readonly _context: IChatMessage[] = [];
@@ -102,6 +111,7 @@ export class CompyleChatWidget extends Disposable {
 		@IModelService private readonly _modelService: IModelService,
 		@IWorkspaceContextService private readonly _workspaceContextService: IWorkspaceContextService,
 		@IFileService private readonly _fileService: IFileService,
+		@IFileDialogService private readonly _fileDialogService: IFileDialogService,
 		@ILabelService private readonly _labelService: ILabelService,
 	) {
 		super();
@@ -257,10 +267,17 @@ export class CompyleChatWidget extends Disposable {
 		const area = append(this._root, $('.cpc-input-area'));
 
 		const toolbar = append(area, $('.cpc-toolbar'));
+		const attachBtn = append(toolbar, $('button.cpc-tool-btn'));
+		append(attachBtn, $('span.codicon.codicon-attach'));
+		append(attachBtn, $('span', undefined, localize('compyleChat.attach', "Attach")));
+		this._disposables.add(addDisposableListener(attachBtn, 'click', () => this._attachFiles()));
+
 		const githubBtn = append(toolbar, $('button.cpc-tool-btn'));
 		append(githubBtn, $('span.codicon.codicon-github'));
 		append(githubBtn, $('span', undefined, localize('compyleChat.githubSearch', "Search GitHub")));
 		this._disposables.add(addDisposableListener(githubBtn, 'click', () => this._searchGitHub()));
+
+		this._attachStrip = append(area, $('.cpc-attach-strip'));
 
 		const row = append(area, $('.cpc-input-row'));
 		this._textarea = append(row, $('textarea.cpc-textarea')) as HTMLTextAreaElement;
@@ -281,6 +298,68 @@ export class CompyleChatWidget extends Disposable {
 
 		this._sendBtn = append(row, $('button.cpc-send-btn', undefined, localize('compyleChat.send', "Send"))) as HTMLButtonElement;
 		this._disposables.add(addDisposableListener(this._sendBtn, 'click', () => this._send()));
+	}
+
+	// ---- Attachments ------------------------------------------------------
+
+	private async _attachFiles(): Promise<void> {
+		const uris = await this._fileDialogService.showOpenDialog({
+			title: localize('compyleChat.attachTitle', "Attach Images or Files"),
+			canSelectFiles: true,
+			canSelectFolders: false,
+			canSelectMany: true,
+			filters: [
+				{ name: localize('compyleChat.images', "Images"), extensions: IMAGE_EXTENSIONS },
+				{ name: localize('compyleChat.allFiles', "All Files"), extensions: ['*'] },
+			],
+		});
+		if (!uris || uris.length === 0) {
+			return;
+		}
+		for (const uri of uris) {
+			const ext = (uri.path.split('.').pop() ?? '').toLowerCase();
+			const name = this._labelService.getUriBasenameLabel(uri);
+			try {
+				const content = await this._fileService.readFile(uri);
+				if (IMAGE_EXTENSIONS.includes(ext)) {
+					this._pendingImages.push({ name, base64: encodeBase64(content.value) });
+				} else {
+					// Non-image files become text context, capped to keep the prompt manageable.
+					this._contextItems.push({ label: name, content: content.value.toString().slice(0, 20000) });
+					this._renderContextStrip();
+				}
+			} catch {
+				this._notificationService.warn(localize('compyleChat.attachFailed', "Could not read {0}.", name));
+			}
+		}
+		this._renderAttachStrip();
+		this._maybeWarnVision();
+	}
+
+	private _renderAttachStrip(): void {
+		clearNode(this._attachStrip);
+		for (let i = 0; i < this._pendingImages.length; i++) {
+			const chip = append(this._attachStrip, $('.cpc-attach-chip'));
+			append(chip, $('span.codicon.codicon-file-media'));
+			append(chip, $('span', undefined, this._pendingImages[i].name));
+			const removeBtn = append(chip, $('button.cpc-context-chip-remove')) as HTMLButtonElement;
+			append(removeBtn, $('span.codicon.codicon-close'));
+			const idx = i;
+			this._disposables.add(addDisposableListener(removeBtn, 'click', () => {
+				this._pendingImages.splice(idx, 1);
+				this._renderAttachStrip();
+			}));
+		}
+	}
+
+	private _maybeWarnVision(): void {
+		if (this._pendingImages.length === 0) {
+			return;
+		}
+		const model = (this._configurationService.getValue<string>('compyle.brain.model') || '').toLowerCase();
+		if (!VISION_MODEL_HINTS.some(h => model.includes(h))) {
+			this._notificationService.info(localize('compyleChat.notVision', "The current model may not be able to see images. Try a vision model such as llava or llama3.2-vision."));
+		}
 	}
 
 	private _renderEmptyState(): void {
@@ -343,9 +422,17 @@ export class CompyleChatWidget extends Disposable {
 			clearNode(this._msgList);
 		}
 
-		this._context.push({ role: 'user', content: text });
-		this._visible.push({ role: 'user', content: text });
-		this._appendBubble('user', text);
+		const images = this._pendingImages.length ? this._pendingImages.map(i => i.base64) : undefined;
+		const imageNames = this._pendingImages.map(i => i.name);
+		this._context.push({ role: 'user', content: text, images });
+		this._visible.push({ role: 'user', content: text, images });
+		const userBubble = this._appendBubble('user', text);
+		if (imageNames.length) {
+			// allow-any-unicode-next-line
+			append(userBubble, $('.cpc-attach-note', undefined, localize('compyleChat.attachedNote', "📎 {0} image(s): {1}", imageNames.length, imageNames.join(', '))));
+		}
+		this._pendingImages = [];
+		this._renderAttachStrip();
 		this._textarea.value = '';
 		this._textarea.style.height = 'auto';
 		this._sendBtn.disabled = true;
@@ -461,7 +548,7 @@ export class CompyleChatWidget extends Disposable {
 			messages.push({ role: 'assistant', content: 'Understood. I can see your project and the files you have open, and I will use them to help.' });
 		}
 		for (const m of this._context) {
-			messages.push({ role: m.role, content: m.content });
+			messages.push({ role: m.role, content: m.content, images: m.images });
 		}
 		return messages;
 	}

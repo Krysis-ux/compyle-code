@@ -568,6 +568,35 @@
 	color: var(--vscode-foreground);
 }
 
+/* ---- Attachments ------------------------------------------------------ */
+
+.cpc-attach-strip {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.cpc-attach-strip:empty {
+	display: none;
+}
+
+.cpc-attach-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 40%, transparent);
+	background: color-mix(in srgb, var(--compyle-accent, var(--vscode-focusBorder)) 12%, transparent);
+	font-size: 11.5px;
+}
+
+.cpc-attach-note {
+	margin-top: 6px;
+	font-size: 11px;
+	opacity: 0.85;
+}
+
 /* ---- Agent status rows + diff cards ----------------------------------- */
 
 .cpc-status-row {
