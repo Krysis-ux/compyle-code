@@ -28,7 +28,9 @@ import { ITerminalService, ITerminalGroupService } from '../../terminal/browser/
 import { CompyleBrainProvider } from '../common/compyleBrain.js';
 import { ICompyleBrainService, ICompyleChatMessage } from './compyleBrainService.js';
 import { ICompyleAgentService, ICompyleAgentEvent } from './compyleAgentService.js';
+import { ICompyleChatHistoryService } from './compyleChatHistoryService.js';
 import { simpleLineDiff } from '../common/compyleDiff.js';
+import { generateUuid } from '../../../../base/common/uuid.js';
 import { COMPYLE_AGENT_MODE_SETTING, COMPYLE_AGENT_MODES } from '../common/compyleAgentModes.js';
 
 interface IContextItem {
@@ -93,12 +95,15 @@ export class CompyleChatWidget extends Disposable {
 	private _busyCts: CancellationTokenSource | undefined;
 	private _startingOllama = false;
 	private _rendered = false;
+	private _sessionId = generateUuid();
+	private _saveHandle: ReturnType<typeof setTimeout> | undefined;
 
 	private readonly _disposables = this._register(new DisposableStore());
 
 	constructor(
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
 		@ICompyleAgentService private readonly _agentService: ICompyleAgentService,
+		@ICompyleChatHistoryService private readonly _historyService: ICompyleChatHistoryService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
@@ -202,11 +207,19 @@ export class CompyleChatWidget extends Disposable {
 			this._configurationService.updateValue('compyle.brain.agentEditing', auto ? 'approve' : 'auto');
 		}));
 
-		const clearBtn = append(right, $('button.cpc-btn.small', undefined, localize('compyleChat.clear', "Clear")));
-		this._disposables.add(addDisposableListener(clearBtn, 'click', () => this._clearHistory()));
+		const newChatBtn = append(right, $('button.cpc-btn.small')) as HTMLButtonElement;
+		append(newChatBtn, $('span.codicon.codicon-add'));
+		newChatBtn.title = localize('compyleChat.newChat', "New Chat");
+		this._disposables.add(addDisposableListener(newChatBtn, 'click', () => this._newChat()));
+
+		const historyBtn = append(right, $('button.cpc-btn.small')) as HTMLButtonElement;
+		append(historyBtn, $('span.codicon.codicon-history'));
+		historyBtn.title = localize('compyleChat.history', "Chat History");
+		this._disposables.add(addDisposableListener(historyBtn, 'click', () => this._openHistory()));
 
 		const settingsBtn = append(right, $('button.cpc-btn.small'));
 		append(settingsBtn, $('span.codicon.codicon-gear'));
+		settingsBtn.title = localize('compyleChat.settings', "Compyle AI Settings");
 		this._disposables.add(addDisposableListener(settingsBtn, 'click', () => {
 			this._commandService.executeCommand('workbench.action.openSettings', 'compyle.brain');
 		}));
@@ -515,6 +528,7 @@ export class CompyleChatWidget extends Disposable {
 			this._context.push(...result.transcriptAdditions);
 			typing.remove();
 			this._scrollToBottom();
+			this._scheduleSave();
 		} catch (err: unknown) {
 			typing.remove();
 			sealLiveBubble(liveBuffer);
@@ -590,10 +604,84 @@ export class CompyleChatWidget extends Disposable {
 		this._scrollToBottom();
 	}
 
-	private _clearHistory(): void {
+	// ---- Chat history (sessions) -----------------------------------------
+
+	private _newChat(): void {
+		this._saveSession();
 		this._context.length = 0;
 		this._visible.length = 0;
+		this._contextItems.length = 0;
+		this._renderContextStrip();
+		this._sessionId = generateUuid();
 		this._renderEmptyState();
+	}
+
+	private async _openHistory(): Promise<void> {
+		const sessions = this._historyService.list();
+		if (sessions.length === 0) {
+			this._notificationService.info(localize('compyleChat.noHistory', "No saved chats yet."));
+			return;
+		}
+		const picks = sessions.map(s => ({
+			id: s.id,
+			label: s.title || localize('compyleChat.untitled', "Untitled chat"),
+			description: new Date(s.updatedAt).toLocaleString(),
+		}));
+		const picked = await this._quickInputService.pick(picks, { placeHolder: localize('compyleChat.pickChat', "Open a previous chat") });
+		if (!picked) {
+			return;
+		}
+		const session = this._historyService.load(picked.id);
+		if (!session) {
+			return;
+		}
+		this._saveSession();
+		this._sessionId = session.id;
+		this._context.length = 0;
+		this._context.push(...session.context);
+		this._visible.length = 0;
+		this._visible.push(...session.visible);
+		this._renderVisible();
+	}
+
+	private _renderVisible(): void {
+		clearNode(this._msgList);
+		if (this._visible.length === 0) {
+			this._renderEmptyState();
+			return;
+		}
+		for (const m of this._visible) {
+			this._appendBubble(m.role, m.content);
+		}
+		this._scrollToBottom();
+	}
+
+	private _saveSession(): void {
+		if (this._visible.length === 0) {
+			return;
+		}
+		const firstUser = this._visible.find(m => m.role === 'user');
+		const title = (firstUser?.content ?? localize('compyleChat.untitled', "Untitled chat")).slice(0, 60);
+		const now = Date.now();
+		const existing = this._historyService.load(this._sessionId);
+		this._historyService.save({
+			id: this._sessionId,
+			title,
+			createdAt: existing?.createdAt ?? now,
+			updatedAt: now,
+			context: this._context.map(m => ({ role: m.role, content: m.content, images: m.images })),
+			visible: this._visible.map(m => ({ role: m.role, content: m.content, images: m.images })),
+		});
+	}
+
+	private _scheduleSave(): void {
+		if (this._saveHandle !== undefined) {
+			clearTimeout(this._saveHandle);
+		}
+		this._saveHandle = setTimeout(() => {
+			this._saveHandle = undefined;
+			this._saveSession();
+		}, 600);
 	}
 
 	// ---- Project / file context ------------------------------------------
@@ -876,6 +964,11 @@ export class CompyleChatWidget extends Disposable {
 	}
 
 	override dispose(): void {
+		if (this._saveHandle !== undefined) {
+			clearTimeout(this._saveHandle);
+			this._saveHandle = undefined;
+		}
+		this._saveSession();
 		this._busyCts?.cancel();
 		this._busyCts?.dispose();
 		super.dispose();
