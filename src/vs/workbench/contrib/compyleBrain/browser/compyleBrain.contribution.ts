@@ -133,6 +133,37 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			description: localize('compyle.brain.excludePatterns', "Glob patterns to exclude from Compyle Brain context. Secrets and lock files are excluded by default."),
 			scope: ConfigurationScope.RESOURCE,
 		},
+		'compyle.brain.agentEditing': {
+			type: 'string',
+			enum: ['approve', 'auto'],
+			default: 'approve',
+			enumDescriptions: [
+				localize('agentEditing.approve', "Show a diff and require approval before applying edits."),
+				localize('agentEditing.auto', "Full control: apply edits and run commands automatically."),
+			],
+			description: localize('compyle.brain.agentEditing', "How Compyle AI applies file edits and runs commands."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		'compyle.brain.allowRunCommands': {
+			type: 'boolean',
+			default: true,
+			description: localize('compyle.brain.allowRunCommands', "Let Compyle AI run terminal commands to build and test your code."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		'compyle.brain.maxAgentSteps': {
+			type: 'number',
+			default: 12,
+			minimum: 1,
+			maximum: 50,
+			description: localize('compyle.brain.maxAgentSteps', "Maximum number of tool-use iterations Compyle AI may take per request."),
+			scope: ConfigurationScope.APPLICATION,
+		},
+		'compyle.brain.skillPresets': {
+			type: 'object',
+			default: {},
+			description: localize('compyle.brain.skillPresets', "Named sets of skills to enable together in Compyle AI."),
+			scope: ConfigurationScope.APPLICATION,
+		},
 	}
 });
 

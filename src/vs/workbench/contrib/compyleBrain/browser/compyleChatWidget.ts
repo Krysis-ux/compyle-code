@@ -10,6 +10,7 @@ import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.j
 import { timeout } from '../../../../base/common/async.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
@@ -80,6 +81,7 @@ export class CompyleChatWidget extends Disposable {
 
 	constructor(
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
+		@ICommandService private readonly _commandService: ICommandService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@INotificationService private readonly _notificationService: INotificationService,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
@@ -176,7 +178,7 @@ export class CompyleChatWidget extends Disposable {
 		const settingsBtn = append(right, $('button.cpc-btn.small'));
 		append(settingsBtn, $('span.codicon.codicon-gear'));
 		this._disposables.add(addDisposableListener(settingsBtn, 'click', () => {
-			this._configurationService.updateValue('workbench.action.openSettings', 'compyle.brain');
+			this._commandService.executeCommand('workbench.action.openSettings', 'compyle.brain');
 		}));
 	}
 
