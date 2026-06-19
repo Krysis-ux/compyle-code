@@ -991,7 +991,11 @@ export class CompyleChatWidget extends Disposable {
 		}
 		await this._configurationService.updateValue('compyle.router.trainingTarget', target);
 		await this._configurationService.updateValue('compyle.router.trainingEnabled', true);
-		this._notificationService.info(localize('compyleChat.trainingStarted', "Router training on — Compyle AI will learn from its mistakes into \"{0}\".", target));
+		this._notificationService.prompt(
+			Severity.Info,
+			localize('compyleChat.trainingStarted', "Router training on — Compyle AI will learn from its mistakes into \"{0}\".", target),
+			[{ label: localize('compyleChat.openDashboard', "Open autonomous training…"), run: () => { void this._commandService.executeCommand('compyle.router.training.open'); } }],
+		);
 	}
 
 	private async _synthesizeRouterRule(prompt: string, output: string): Promise<string | undefined> {

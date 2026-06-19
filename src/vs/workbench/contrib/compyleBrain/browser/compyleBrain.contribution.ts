@@ -28,6 +28,8 @@ import { CompyleLocalModelsInput, CompyleLocalModelsInputSerializer } from './co
 import { CompyleChatEditor } from './compyleChat.js';
 import { CompyleChatInput, CompyleChatInputSerializer } from './compyleChatInput.js';
 import { CompyleChatViewPane } from './compyleChatViewPane.js';
+import { CompyleTrainingDashboard } from './compyleTrainingDashboard.js';
+import { CompyleTrainingInput, CompyleTrainingInputSerializer } from './compyleTrainingInput.js';
 import './compyleAgentService.js';
 import './compyleChatHistoryService.js';
 import './compyleMemoryService.js';
@@ -207,6 +209,18 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
 Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
 	.registerEditorSerializer(CompyleChatInput.ID, CompyleChatInputSerializer);
 
+Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+	EditorPaneDescriptor.create(
+		CompyleTrainingDashboard,
+		CompyleTrainingDashboard.ID,
+		localize('compyleTraining', "Router Training"),
+	),
+	[new SyncDescriptor(CompyleTrainingInput)],
+);
+
+Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
+	.registerEditorSerializer(CompyleTrainingInput.ID, CompyleTrainingInputSerializer);
+
 // ---------------------------------------------------------------------------
 // Compyle AI view — lives in the auxiliary bar (right side panel), like Copilot
 // ---------------------------------------------------------------------------
@@ -254,6 +268,24 @@ class OpenCompyleBrainAction extends Action2 {
 	override async run(accessor: ServicesAccessor): Promise<void> {
 		const viewsService = accessor.get(IViewsService);
 		await viewsService.openView(CompyleChatViewPane.ID, true);
+	}
+}
+
+class OpenRouterTrainingAction extends Action2 {
+	constructor() {
+		super({
+			id: 'compyle.router.training.open',
+			title: { value: localize('compyle.router.training.open', "Open Router Training"), original: 'Open Router Training' },
+			category: { value: localize('compyle', "Compyle"), original: 'Compyle' },
+			f1: true,
+			menu: [{ id: MenuId.CommandPalette }],
+		});
+	}
+
+	override async run(accessor: ServicesAccessor): Promise<void> {
+		const editorService = accessor.get(IEditorService);
+		const instantiationService = accessor.get(IInstantiationService);
+		await editorService.openEditor(instantiationService.createInstance(CompyleTrainingInput), { pinned: false });
 	}
 }
 
@@ -532,6 +564,7 @@ class AskCompyleBrainAction extends Action2 {
 }
 
 registerAction2(OpenCompyleBrainAction);
+registerAction2(OpenRouterTrainingAction);
 registerAction2(ToggleCompyleChatViewAction);
 registerAction2(OpenLocalModelsAction);
 registerAction2(GenerateProjectMemoryAction);

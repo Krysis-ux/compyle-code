@@ -33,6 +33,8 @@ export interface ICompyleChatOptions {
 	readonly maxTokens?: number;
 	/** Skip the cloud-send confirmation (caller has already confirmed). */
 	readonly silent?: boolean;
+	/** Override the configured model for this one call (used by dual-model training). */
+	readonly model?: string;
 }
 
 /** Progress reported while downloading (pulling) a local model. */
@@ -170,7 +172,8 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			throw new Error(localize('compyle.brain.focusMode', "AI is off in Focus mode. Switch to another mode to use Compyle Brain."));
 		}
 
-		const config = this.getConfig();
+		const baseConfig = this.getConfig();
+		const config: CompyleBrainProviderConfig = options.model ? { ...baseConfig, model: options.model } : baseConfig;
 		if (config.provider === CompyleBrainProvider.None) {
 			throw new Error(localize('compyle.brain.notConfigured', "Compyle Brain has no AI provider selected. Configure one in Settings."));
 		}

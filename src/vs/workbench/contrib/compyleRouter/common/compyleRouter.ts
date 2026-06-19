@@ -48,6 +48,31 @@ export interface ICompyleRouterConfig {
 	readonly rules: readonly ICompyleRouterRule[];
 }
 
+function normalizeRouterRule(obj: Partial<ICompyleRouterRule>): ICompyleRouterRule | undefined {
+	const keywords = Array.isArray(obj.keywords)
+		? obj.keywords.map(String).map(k => k.trim()).filter(Boolean)
+		: [];
+	const name = obj.name ? String(obj.name).trim() : '';
+	if (!name || keywords.length === 0) {
+		return undefined;
+	}
+	const difficulty = obj.difficulty === 'line' || obj.difficulty === 'function' || obj.difficulty === 'feature' || obj.difficulty === 'project'
+		? obj.difficulty
+		: undefined;
+	const examples = Array.isArray(obj.examples) ? obj.examples.map(String).filter(Boolean).slice(0, 5) : undefined;
+	return {
+		name,
+		keywords,
+		...(typeof obj.systemPromptPrefix === 'string' ? { systemPromptPrefix: obj.systemPromptPrefix } : {}),
+		...(typeof obj.suggestedModel === 'string' ? { suggestedModel: obj.suggestedModel } : {}),
+		...(typeof obj.correct === 'number' ? { correct: obj.correct } : {}),
+		...(typeof obj.errors === 'number' ? { errors: obj.errors } : {}),
+		...(examples?.length ? { examples } : {}),
+		...(obj.source === 'manual' || obj.source === 'synth' ? { source: obj.source } : {}),
+		...(difficulty ? { difficulty } : {}),
+	};
+}
+
 /** Parse a `.jsonl` router file (one rule object per line). Malformed lines are skipped. */
 export function parseRouterRulesJsonl(text: string): ICompyleRouterRule[] {
 	const rules: ICompyleRouterRule[] = [];
@@ -57,15 +82,37 @@ export function parseRouterRulesJsonl(text: string): ICompyleRouterRule[] {
 			continue;
 		}
 		try {
-			const obj = JSON.parse(trimmed) as ICompyleRouterRule;
-			if (obj && typeof obj.name === 'string' && Array.isArray(obj.keywords)) {
-				rules.push(obj);
+			const obj = JSON.parse(trimmed) as Partial<ICompyleRouterRule>;
+			const rule = normalizeRouterRule(obj);
+			if (rule) {
+				rules.push(rule);
 			}
 		} catch {
 			// Skip malformed lines rather than throwing.
 		}
 	}
 	return rules;
+}
+
+/** Parse a router config from either JSON (`{ rules: [...] }`) or JSONL (one rule per line). */
+export function parseRouterConfigText(text: string): ICompyleRouterConfig {
+	const trimmed = text.trim();
+	if (!trimmed) {
+		return { rules: [] };
+	}
+	try {
+		const parsed = JSON.parse(trimmed) as Partial<ICompyleRouterConfig>;
+		if (Array.isArray(parsed?.rules)) {
+			return {
+				rules: parsed.rules
+					.map(rule => normalizeRouterRule(rule as Partial<ICompyleRouterRule>))
+					.filter((rule): rule is ICompyleRouterRule => !!rule),
+			};
+		}
+	} catch {
+		// Fall through to JSONL parsing.
+	}
+	return { rules: parseRouterRulesJsonl(text) };
 }
 
 /** Serialize rules to `.jsonl` (one compact JSON object per line). Append-only friendly, tiny on disk. */
