@@ -6,11 +6,13 @@
 import './media/compyleChat.css';
 import { $, append, clearNode, addDisposableListener } from '../../../../base/browser/dom.js';
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
+import { Disposable, DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
 import { timeout } from '../../../../base/common/async.js';
+import { MarkdownString } from '../../../../base/common/htmlContent.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
@@ -82,6 +84,7 @@ export class CompyleChatWidget extends Disposable {
 	constructor(
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
 		@ICommandService private readonly _commandService: ICommandService,
+		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@INotificationService private readonly _notificationService: INotificationService,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
@@ -275,8 +278,26 @@ export class CompyleChatWidget extends Disposable {
 		const wrap = append(this._msgList, $(`.cpc-msg.${role}`));
 		append(wrap, $('span.cpc-msg-role', undefined, role === 'user' ? localize('compyleChat.you', "You") : localize('compyleChat.ai', "Compyle AI")));
 		const bubble = append(wrap, $('.cpc-bubble'));
-		bubble.textContent = content;
+		if (role === 'assistant') {
+			this._disposables.add(this._renderMarkdownInto(bubble, content));
+		} else {
+			bubble.textContent = content;
+		}
 		return bubble;
+	}
+
+	/**
+	 * Render assistant text as markdown so code blocks are syntax-highlighted and
+	 * distinct from prose. The workbench wires an editor-based code-block renderer
+	 * into the markdown service, so we get highlighting for free.
+	 */
+	private _renderMarkdownInto(bubble: HTMLElement, text: string): IDisposable {
+		clearNode(bubble);
+		const md = new MarkdownString(text);
+		md.isTrusted = false;
+		const rendered = this._markdownRendererService.render(md);
+		bubble.appendChild(rendered.element);
+		return rendered;
 	}
 
 	private _appendTypingIndicator(): HTMLElement {
