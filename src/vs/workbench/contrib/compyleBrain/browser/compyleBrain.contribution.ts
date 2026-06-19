@@ -28,6 +28,7 @@ import { CompyleLocalModelsInput, CompyleLocalModelsInputSerializer } from './co
 import { CompyleChatEditor } from './compyleChat.js';
 import { CompyleChatInput, CompyleChatInputSerializer } from './compyleChatInput.js';
 import { CompyleChatViewPane } from './compyleChatViewPane.js';
+import './compyleAgentService.js';
 
 // ---------------------------------------------------------------------------
 // Settings registration
