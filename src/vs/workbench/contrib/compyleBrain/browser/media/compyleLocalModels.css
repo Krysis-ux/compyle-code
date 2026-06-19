@@ -222,6 +222,18 @@
 	max-width: 1080px;
 }
 
+.clm-section-titlerow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 4px;
+}
+
+.clm-section-titlerow .clm-section-title {
+	margin-bottom: 0;
+}
+
 .clm-section-title {
 	display: flex;
 	align-items: center;
@@ -467,6 +479,58 @@
 	display: flex;
 	gap: 8px;
 	margin-top: 12px;
+}
+
+/* ---- Custom routers ----------------------------------------------------- */
+
+.clm-router-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.clm-router-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 14px;
+	border-radius: var(--compyle-radius, 6px);
+	border: 1px solid color-mix(in srgb, var(--vscode-foreground) 12%, transparent);
+	background: color-mix(in srgb, var(--vscode-editorWidget-background, var(--vscode-editor-background)) 95%, transparent);
+}
+
+.clm-router-info {
+	min-width: 0;
+}
+
+.clm-router-name-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 7px;
+}
+
+.clm-router-name {
+	font-size: 13px;
+	font-weight: 650;
+	font-family: var(--monaco-monospace-font);
+}
+
+.clm-router-meta {
+	margin-top: 4px;
+	font-size: 11.5px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.clm-router-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	flex: 0 0 auto;
 }
 
 /* ---- Download progress -------------------------------------------------- */

@@ -8,7 +8,7 @@ import { $, append, clearNode, addDisposableListener, Dimension } from '../../..
 import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { timeout } from '../../../../base/common/async.js';
-import { joinPath, dirname } from '../../../../base/common/resources.js';
+import { basename, dirname, joinPath } from '../../../../base/common/resources.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { localize } from '../../../../nls.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
@@ -18,7 +18,8 @@ import { IProgressService, ProgressLocation } from '../../../../platform/progres
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
+import { IRequestService, asJson } from '../../../../platform/request/common/request.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { EditorPane } from '../../../browser/parts/editor/editorPane.js';
@@ -26,8 +27,11 @@ import { IEditorOpenContext } from '../../../common/editor.js';
 import { IEditorGroup } from '../../../services/editor/common/editorGroupsService.js';
 import { ITerminalService, ITerminalGroupService } from '../../terminal/browser/terminal.js';
 import { CompyleBrainProvider, ILocalModelInfo, OLLAMA_CATALOG } from '../common/compyleBrain.js';
+import { buildHfModelUrl, buildHfSearchUrl, buildOllamaHfPull, IHfModel, parseGgufQuants, parseHfModels } from '../common/compyleModelSearch.js';
 import { ICompyleBrainService } from './compyleBrainService.js';
 import { CompyleLocalModelsInput } from './compyleLocalModelsInput.js';
+import { ICompyleRouterService } from '../../compyleRouter/browser/compyleRouterService.js';
+import { COMPYLE_ROUTER_CUSTOM_PATH_SETTING, COMPYLE_ROUTER_MODE_SETTING, parseRouterConfigText, serializeRouterRulesJsonl } from '../../compyleRouter/common/compyleRouter.js';
 
 type CatalogSizeFilter = 'all' | 'small' | 'medium' | 'large';
 
@@ -66,6 +70,10 @@ export class CompyleLocalModelsEditor extends EditorPane {
 	private _catalogFilter = '';
 	private _sizeFilter: CatalogSizeFilter = 'all';
 	private _startingOllama = false;
+	private _routers: string[] = [];
+	private _routerCounts = new Map<string, number>();
+	private _loadingRouters = false;
+	private _routersError: string | undefined;
 	private readonly _downloads = new Map<string, { percent: number; status: string }>();
 	private readonly _downloadEls = new Map<string, { bar: HTMLElement; label: HTMLElement }>();
 	private _pullCts: CancellationTokenSource | undefined;
@@ -79,11 +87,13 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		@IStorageService storageService: IStorageService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
+		@ICompyleRouterService private readonly _routerService: ICompyleRouterService,
 		@IProgressService private readonly _progressService: IProgressService,
 		@INotificationService private readonly _notificationService: INotificationService,
 		@ITerminalService private readonly _terminalService: ITerminalService,
 		@ITerminalGroupService private readonly _terminalGroupService: ITerminalGroupService,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
+		@IRequestService private readonly _requestService: IRequestService,
 		@IFileService private readonly _fileService: IFileService,
 		@IFileDialogService private readonly _fileDialogService: IFileDialogService,
 	) {
@@ -94,6 +104,7 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		this._root = append(parent, $('.clm-root'));
 		this._render();
 		void this._refreshModels();
+		void this._refreshRouters();
 	}
 
 	// -- data --------------------------------------------------------------
@@ -110,6 +121,119 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		} finally {
 			this._loadingModels = false;
 			this._render();
+		}
+	}
+
+	private async _refreshRouters(): Promise<void> {
+		this._loadingRouters = true;
+		this._routersError = undefined;
+		this._render();
+		try {
+			this._routers = await this._routerService.listRouters();
+			const counts = new Map<string, number>();
+			for (const router of this._routers) {
+				const config = await this._routerService.getRouter(router);
+				counts.set(router, config.rules.length);
+			}
+			this._routerCounts = counts;
+		} catch (error) {
+			this._routers = [];
+			this._routerCounts.clear();
+			this._routersError = error instanceof Error ? error.message : String(error);
+		} finally {
+			this._loadingRouters = false;
+			this._render();
+		}
+	}
+
+	private async _createRouter(): Promise<void> {
+		const name = await this._quickInputService.input({
+			title: localize("compyleLocalModels.newRouterTitle", "New Router"),
+			prompt: localize("compyleLocalModels.newRouterPrompt", "Name this custom router"),
+			placeHolder: 'local-coding-router',
+		});
+		if (!name?.trim()) {
+			return;
+		}
+		try {
+			await this._routerService.createRouter(name.trim());
+			await this._refreshRouters();
+			this._notificationService.info(localize("compyleLocalModels.routerCreated", "Created router \"{0}\".", name.trim()));
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private async _importRouter(): Promise<void> {
+		const picked = await this._fileDialogService.showOpenDialog({
+			canSelectFiles: true,
+			canSelectMany: false,
+			title: localize("compyleLocalModels.importRouterTitle", "Import a router JSON or JSONL file"),
+			filters: [{ name: 'Router', extensions: ['json', 'jsonl'] }],
+		});
+		if (!picked || picked.length === 0) {
+			return;
+		}
+		const source = picked[0];
+		const defaultName = basename(source).replace(/\.(jsonl?|router)$/i, '') || 'imported-router';
+		const name = await this._quickInputService.input({
+			title: localize("compyleLocalModels.importRouterNameTitle", "Import Router"),
+			prompt: localize("compyleLocalModels.importRouterNamePrompt", "Name the new custom router"),
+			value: defaultName,
+		});
+		if (!name?.trim()) {
+			return;
+		}
+		try {
+			const raw = (await this._fileService.readFile(source)).value.toString();
+			const config = parseRouterConfigText(raw);
+			if (config.rules.length === 0) {
+				this._notificationService.warn(localize("compyleLocalModels.importRouterEmpty", "That file did not contain any valid router rules."));
+				return;
+			}
+			await this._routerService.saveRouter(name.trim(), config);
+			await this._refreshRouters();
+			this._notificationService.info(localize("compyleLocalModels.importRouterDone", "Imported {0} rule(s) into \"{1}\".", config.rules.length, name.trim()));
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private async _exportRouter(name: string): Promise<void> {
+		try {
+			const config = await this._routerService.getRouter(name);
+			const defaultFolder = await this._fileDialogService.defaultFolderPath();
+			const target = await this._fileDialogService.showSaveDialog({
+				title: localize("compyleLocalModels.exportRouterTitle", "Export Router"),
+				defaultUri: joinPath(defaultFolder, `${name}.jsonl`),
+				filters: [{ name: 'JSONL', extensions: ['jsonl'] }, { name: 'JSON', extensions: ['json'] }],
+			});
+			if (!target) {
+				return;
+			}
+			const text = target.path.toLowerCase().endsWith('.json')
+				? JSON.stringify(config, undefined, '\t') + '\n'
+				: serializeRouterRulesJsonl(config.rules);
+			await this._fileService.writeFile(target, VSBuffer.fromString(text));
+			this._notificationService.info(localize("compyleLocalModels.exportRouterDone", "Exported router \"{0}\".", name));
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private async _useRouterForTraining(name: string): Promise<void> {
+		await this._configurationService.updateValue('compyle.router.trainingTarget', name);
+		this._render();
+		this._notificationService.info(localize("compyleLocalModels.trainingRouterSet", "Router training target set to \"{0}\".", name));
+	}
+
+	private async _useRouterForRouting(name: string): Promise<void> {
+		try {
+			await this._routerService.activateRouter(name);
+			this._render();
+			this._notificationService.info(localize("compyleLocalModels.routingRouterSet", "Custom routing now uses \"{0}\".", name));
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
 		}
 	}
 
@@ -262,6 +386,113 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		}
 	}
 
+	// -- Hugging Face search -----------------------------------------------
+
+	private async _searchHuggingFace(): Promise<void> {
+		type ModelPick = IQuickPickItem & { hf?: IHfModel; catalogName?: string };
+		const picker = this._quickInputService.createQuickPick<ModelPick>({ useSeparators: true });
+		picker.placeholder = localize("compyleLocalModels.searchPlaceholder", "Search Hugging Face for GGUF models (e.g. qwen2.5 coder)…");
+		picker.matchOnDescription = true;
+		picker.matchOnDetail = true;
+		this._disposables.add(picker);
+
+		const curatedItems = (query: string): (ModelPick | IQuickPickSeparator)[] => {
+			const q = query.toLowerCase();
+			const curated = OLLAMA_CATALOG.filter(c => !q || c.name.toLowerCase().includes(q) || c.label.toLowerCase().includes(q) || c.description.toLowerCase().includes(q));
+			if (!curated.length) {
+				return [];
+			}
+			const items: (ModelPick | IQuickPickSeparator)[] = [{ type: 'separator', label: localize("compyleLocalModels.recommended", "Recommended (Ollama)") }];
+			for (const c of curated) {
+				items.push({ label: c.name, description: c.size, detail: c.description, catalogName: c.name });
+			}
+			return items;
+		};
+		picker.items = curatedItems('');
+
+		let debounce: ReturnType<typeof setTimeout> | undefined;
+		this._disposables.add(picker.onDidChangeValue(value => {
+			if (debounce !== undefined) {
+				clearTimeout(debounce);
+			}
+			const query = value.trim();
+			if (!query) {
+				picker.items = curatedItems('');
+				return;
+			}
+			debounce = setTimeout(async () => {
+				picker.busy = true;
+				try {
+					const cts = new CancellationTokenSource();
+					const res = await this._requestService.request({ type: 'GET', url: buildHfSearchUrl(query), headers: { 'User-Agent': 'CompyleCode/1.0' }, callSite: 'compyleLocalModels.hfSearch' }, cts.token);
+					const models = parseHfModels(await asJson<unknown>(res));
+					const items = curatedItems(query);
+					if (models.length) {
+						items.push({ type: 'separator', label: localize("compyleLocalModels.hfResults", "Hugging Face (GGUF)") });
+						for (const m of models) {
+							items.push({ label: m.id, description: localize("compyleLocalModels.hfStats", "{0} downloads · {1} likes", m.downloads.toLocaleString(), m.likes.toLocaleString()), hf: m });
+						}
+					}
+					picker.items = items;
+				} catch {
+					// Keep the current items on a failed fetch.
+				} finally {
+					picker.busy = false;
+				}
+			}, 350);
+		}));
+
+		this._disposables.add(picker.onDidAccept(async () => {
+			const selected = picker.selectedItems[0];
+			if (!selected) {
+				return;
+			}
+			picker.hide();
+			if (selected.catalogName) {
+				await this._download(selected.catalogName);
+			} else if (selected.hf) {
+				await this._pickQuantAndPull(selected.hf);
+			}
+		}));
+
+		picker.show();
+	}
+
+	private async _pickQuantAndPull(model: IHfModel): Promise<void> {
+		let quants: string[] = [];
+		try {
+			const cts = new CancellationTokenSource();
+			const res = await this._requestService.request({ type: 'GET', url: buildHfModelUrl(model.id), headers: { 'User-Agent': 'CompyleCode/1.0' }, callSite: 'compyleLocalModels.hfModel' }, cts.token);
+			quants = parseGgufQuants(await asJson<unknown>(res));
+		} catch {
+			// No quant list — fall back to the default tag.
+		}
+
+		let quant: string | undefined;
+		if (quants.length > 1) {
+			const picked = await this._quickInputService.pick(quants.map(q => ({ label: q })), { placeHolder: localize("compyleLocalModels.pickQuant", "Pick a quantization for {0}", model.id) });
+			if (!picked) {
+				return;
+			}
+			quant = picked.label;
+		} else if (quants.length === 1) {
+			quant = quants[0];
+		}
+		await this._runOllamaPull(buildOllamaHfPull(model.id, quant));
+	}
+
+	private async _runOllamaPull(name: string): Promise<void> {
+		this._notificationService.info(localize("compyleLocalModels.pullingHf", "Pulling {0} via Ollama…", name));
+		try {
+			const instance = await this._terminalService.createTerminal({});
+			this._terminalService.setActiveInstance(instance);
+			await this._terminalGroupService.showPanel(true);
+			await instance.sendText(`ollama pull ${name}`, true);
+		} catch (error) {
+			this._notificationService.error(error instanceof Error ? error.message : String(error));
+		}
+	}
+
 	private _updateDownloadEl(name: string): void {
 		const els = this._downloadEls.get(name);
 		const state = this._downloads.get(name);
@@ -315,6 +546,7 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		this._renderConnection(config.provider, config.endpoint ?? '');
 		this._renderInstalled(config.model ?? '');
 		this._renderBrowse();
+		this._renderRouters();
 		this._renderAdvanced(config);
 	}
 
@@ -405,7 +637,10 @@ export class CompyleLocalModelsEditor extends EditorPane {
 
 	private _renderBrowse(): void {
 		const section = append(this._root, $('.clm-section'));
-		append(section, $('.clm-section-title', undefined, localize("compyleLocalModels.browse", "Browse & Download")));
+		const titleRow = append(section, $('.clm-section-titlerow'));
+		append(titleRow, $('.clm-section-title', undefined, localize("compyleLocalModels.browse", "Browse & Download")));
+		const searchBtn = append(titleRow, $('button.clm-btn', undefined, localize("compyleLocalModels.searchHf", "Search Hugging Face…"))) as HTMLButtonElement;
+		this._disposables.add(addDisposableListener(searchBtn, 'click', () => void this._searchHuggingFace()));
 		append(section, $('.clm-section-hint', undefined, localize("compyleLocalModels.browseHint", "Pick a recommended model or pull any model by name. Downloads run through Ollama.")));
 
 		const filter = append(section, $('input.clm-input.clm-filter')) as HTMLInputElement;
@@ -418,6 +653,7 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		const sizeOptions: { id: CatalogSizeFilter; label: string }[] = [
 			{ id: 'all', label: localize("compyleLocalModels.size.all", "All sizes") },
 			{ id: 'small', label: localize("compyleLocalModels.size.small", "< 3 GB") },
+			// allow-any-unicode-next-line
 			{ id: 'medium', label: localize("compyleLocalModels.size.medium", "3–8 GB") },
 			{ id: 'large', label: localize("compyleLocalModels.size.large", "> 8 GB") },
 		];
@@ -460,6 +696,67 @@ export class CompyleLocalModelsEditor extends EditorPane {
 		append(importRow, $('.clm-section-hint', undefined, localize("compyleLocalModels.importHint", "Have a model file already? Import a .gguf into Ollama.")));
 		const importBtn = append(importRow, $('button.clm-btn', undefined, localize("compyleLocalModels.importGguf", "Import .gguf…"))) as HTMLButtonElement;
 		this._disposables.add(addDisposableListener(importBtn, 'click', () => void this._importGguf()));
+	}
+
+	private _renderRouters(): void {
+		const section = append(this._root, $('.clm-section'));
+		const titleRow = append(section, $('.clm-section-title'));
+		append(titleRow, $('span', undefined, localize("compyleLocalModels.routers", "Custom Routers")));
+		if (this._routers.length > 0) {
+			append(titleRow, $('span.clm-count', undefined, String(this._routers.length)));
+		}
+		append(section, $('.clm-section-hint', undefined, localize("compyleLocalModels.routersHint", "Create named routers, import JSON/JSONL rule files, export them for sharing, or make one the active custom router.")));
+
+		const actions = append(section, $('.clm-actions'));
+		const createBtn = append(actions, $('button.clm-btn.primary', undefined, localize("compyleLocalModels.createRouter", "Create Router"))) as HTMLButtonElement;
+		const importBtn = append(actions, $('button.clm-btn', undefined, localize("compyleLocalModels.importRouter", "Import Router"))) as HTMLButtonElement;
+		const refreshBtn = append(actions, $('button.clm-btn', undefined, localize("compyleLocalModels.refreshRouters", "Refresh Routers"))) as HTMLButtonElement;
+		this._disposables.add(addDisposableListener(createBtn, 'click', () => void this._createRouter()));
+		this._disposables.add(addDisposableListener(importBtn, 'click', () => void this._importRouter()));
+		this._disposables.add(addDisposableListener(refreshBtn, 'click', () => void this._refreshRouters()));
+
+		if (this._loadingRouters) {
+			append(section, $('.clm-empty', undefined, localize("compyleLocalModels.loadingRouters", "Loading routers...")));
+			return;
+		}
+		if (this._routersError) {
+			append(section, $('.clm-empty.error', undefined, this._routersError));
+			return;
+		}
+		if (this._routers.length === 0) {
+			append(section, $('.clm-empty', undefined, localize("compyleLocalModels.noRouters", "No custom routers yet. Create one, or import one of the reference router files.")));
+			return;
+		}
+
+		const trainingTarget = this._configurationService.getValue<string>('compyle.router.trainingTarget') || '';
+		const routingMode = this._configurationService.getValue<string>(COMPYLE_ROUTER_MODE_SETTING);
+		const customPath = (this._configurationService.getValue<string>(COMPYLE_ROUTER_CUSTOM_PATH_SETTING) || '').replace(/\\/g, '/').toLowerCase();
+		const list = append(section, $('.clm-router-list'));
+		for (const name of this._routers) {
+			const activeRouting = routingMode === 'custom' && customPath.endsWith(`.compyle/routers/${name.toLowerCase()}.jsonl`);
+			const activeTraining = trainingTarget === name;
+			const row = append(list, $('.clm-router-row'));
+			const info = append(row, $('.clm-router-info'));
+			const nameLine = append(info, $('.clm-router-name-row'));
+			append(nameLine, $('.clm-router-name', undefined, name));
+			if (activeRouting) {
+				append(nameLine, $('span.clm-tag.active', undefined, localize("compyleLocalModels.activeRouting", "Routing")));
+			}
+			if (activeTraining) {
+				append(nameLine, $('span.clm-tag', undefined, localize("compyleLocalModels.activeTraining", "Training Target")));
+			}
+			append(info, $('.clm-router-meta', undefined, localize("compyleLocalModels.routerRuleCount", "{0} rule(s)", this._routerCounts.get(name) ?? 0)));
+
+			const rowActions = append(row, $('.clm-router-actions'));
+			const routeBtn = append(rowActions, $('button.clm-btn.primary', undefined, localize("compyleLocalModels.useForRouting", "Use For Routing"))) as HTMLButtonElement;
+			const trainBtn = append(rowActions, $('button.clm-btn', undefined, localize("compyleLocalModels.useForTraining", "Use For Training"))) as HTMLButtonElement;
+			const exportBtn = append(rowActions, $('button.clm-btn', undefined, localize("compyleLocalModels.exportRouter", "Export"))) as HTMLButtonElement;
+			routeBtn.disabled = activeRouting;
+			trainBtn.disabled = activeTraining;
+			this._disposables.add(addDisposableListener(routeBtn, 'click', () => void this._useRouterForRouting(name)));
+			this._disposables.add(addDisposableListener(trainBtn, 'click', () => void this._useRouterForTraining(name)));
+			this._disposables.add(addDisposableListener(exportBtn, 'click', () => void this._exportRouter(name)));
+		}
 	}
 
 	private _renderCatalogList(container: HTMLElement): void {
