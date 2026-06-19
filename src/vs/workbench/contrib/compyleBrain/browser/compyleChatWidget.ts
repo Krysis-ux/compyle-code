@@ -17,7 +17,7 @@ import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.
 import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
 import { IRequestService, asJson, asText } from '../../../../platform/request/common/request.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ILabelService } from '../../../../platform/label/common/label.js';
@@ -29,6 +29,8 @@ import { CompyleBrainProvider } from '../common/compyleBrain.js';
 import { ICompyleBrainService, ICompyleChatMessage } from './compyleBrainService.js';
 import { ICompyleAgentService, ICompyleAgentEvent } from './compyleAgentService.js';
 import { ICompyleChatHistoryService } from './compyleChatHistoryService.js';
+import { ICompyleSkillService } from '../../compyleSkillStudio/browser/compyleSkillService.js';
+import { ICompyleSkill } from '../../compyleSkillStudio/common/compyleSkills.js';
 import { simpleLineDiff } from '../common/compyleDiff.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { COMPYLE_AGENT_MODE_SETTING, COMPYLE_AGENT_MODES } from '../common/compyleAgentModes.js';
@@ -83,7 +85,9 @@ export class CompyleChatWidget extends Disposable {
 	private _contextToggle!: HTMLButtonElement;
 	private _fullControlBtn!: HTMLButtonElement;
 	private _attachStrip!: HTMLElement;
+	private _skillStrip!: HTMLElement;
 	private _pendingImages: { name: string; base64: string }[] = [];
+	private _activeSkills: { name: string; body: string }[] = [];
 
 	/** Full conversation context sent to the model (user inputs, assistant replies, tool results). */
 	private readonly _context: IChatMessage[] = [];
@@ -104,6 +108,7 @@ export class CompyleChatWidget extends Disposable {
 		@ICompyleBrainService private readonly _brainService: ICompyleBrainService,
 		@ICompyleAgentService private readonly _agentService: ICompyleAgentService,
 		@ICompyleChatHistoryService private readonly _historyService: ICompyleChatHistoryService,
+		@ICompyleSkillService private readonly _skillService: ICompyleSkillService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
@@ -285,11 +290,22 @@ export class CompyleChatWidget extends Disposable {
 		append(attachBtn, $('span', undefined, localize('compyleChat.attach', "Attach")));
 		this._disposables.add(addDisposableListener(attachBtn, 'click', () => this._attachFiles()));
 
+		const skillsBtn = append(toolbar, $('button.cpc-tool-btn'));
+		append(skillsBtn, $('span.codicon.codicon-lightbulb'));
+		append(skillsBtn, $('span', undefined, localize('compyleChat.useSkills', "Use Skills")));
+		this._disposables.add(addDisposableListener(skillsBtn, 'click', () => this._chooseSkills()));
+
+		const createSkillBtn = append(toolbar, $('button.cpc-tool-btn'));
+		append(createSkillBtn, $('span.codicon.codicon-sparkle'));
+		append(createSkillBtn, $('span', undefined, localize('compyleChat.createSkill', "Create Skill")));
+		this._disposables.add(addDisposableListener(createSkillBtn, 'click', () => this._createSkillFromChat()));
+
 		const githubBtn = append(toolbar, $('button.cpc-tool-btn'));
 		append(githubBtn, $('span.codicon.codicon-github'));
 		append(githubBtn, $('span', undefined, localize('compyleChat.githubSearch', "Search GitHub")));
 		this._disposables.add(addDisposableListener(githubBtn, 'click', () => this._searchGitHub()));
 
+		this._skillStrip = append(area, $('.cpc-skill-strip'));
 		this._attachStrip = append(area, $('.cpc-attach-strip'));
 
 		const row = append(area, $('.cpc-input-row'));
@@ -548,6 +564,10 @@ export class CompyleChatWidget extends Disposable {
 	private async _buildAgentMessages(): Promise<ICompyleChatMessage[]> {
 		const messages: ICompyleChatMessage[] = [];
 		const contextBlocks: string[] = [];
+		if (this._activeSkills.length > 0) {
+			const skillsText = this._activeSkills.map(s => `## Skill: ${s.name}\n${s.body}`).join('\n\n');
+			contextBlocks.push(`Active skills you must follow:\n\n${skillsText}`);
+		}
 		if (this._useProjectContext) {
 			const projectContext = await this._gatherWorkspaceContext();
 			if (projectContext) {
@@ -682,6 +702,142 @@ export class CompyleChatWidget extends Disposable {
 			this._saveHandle = undefined;
 			this._saveSession();
 		}, 600);
+	}
+
+	// ---- Skills -----------------------------------------------------------
+
+	private _readPresets(): Record<string, string[]> {
+		const raw = this._configurationService.getValue<Record<string, string[]>>('compyle.brain.skillPresets');
+		return raw && typeof raw === 'object' ? raw : {};
+	}
+
+	private async _chooseSkills(): Promise<void> {
+		const files = await this._skillService.listSkills();
+		if (files.length === 0) {
+			this._notificationService.info(localize('compyleChat.noSkills', "No skills found. Create them in Skill Studio or with \"Create Skill\"."));
+			return;
+		}
+		const presets = this._readPresets();
+		type SkillPick = IQuickPickItem & { skill?: ICompyleSkill; presetName?: string };
+		const items: (SkillPick | IQuickPickSeparator)[] = [];
+		const presetNames = Object.keys(presets);
+		if (presetNames.length) {
+			items.push({ type: 'separator', label: localize('compyleChat.presets', "Presets") });
+			for (const name of presetNames) {
+				items.push({ label: name, description: localize('compyleChat.presetSkills', "Preset · {0} skill(s)", presets[name].length), presetName: name });
+			}
+		}
+		items.push({ type: 'separator', label: localize('compyleChat.skillsLabel', "Skills") });
+		for (const f of files) {
+			items.push({ label: f.skill.name, description: f.skill.description, skill: f.skill, picked: this._activeSkills.some(s => s.name === f.skill.name) });
+		}
+
+		const picked = await this._quickInputService.pick(items, { canPickMany: true, placeHolder: localize('compyleChat.pickSkills', "Select skills to guide Compyle AI (added to every message)") });
+		if (!picked) {
+			return;
+		}
+
+		const byName = new Map(files.map(f => [f.skill.name, f.skill]));
+		const active = new Map<string, ICompyleSkill>();
+		for (const p of picked) {
+			if (p.presetName) {
+				for (const n of presets[p.presetName] ?? []) {
+					const s = byName.get(n);
+					if (s) {
+						active.set(n, s);
+					}
+				}
+			} else if (p.skill) {
+				active.set(p.skill.name, p.skill);
+			}
+		}
+		this._activeSkills = [...active.values()].map(s => ({ name: s.name, body: s.body }));
+		this._renderSkillChips();
+
+		if (this._activeSkills.length > 0) {
+			await this._maybeSavePreset();
+		}
+	}
+
+	private async _maybeSavePreset(): Promise<void> {
+		const choice = await this._quickInputService.pick(
+			[
+				{ label: localize('compyleChat.done', "Done"), id: 'done' },
+				{ label: localize('compyleChat.savePreset', "Save this set as a preset…"), id: 'save' },
+			],
+			{ placeHolder: localize('compyleChat.savePresetQ', "Save this skill selection as a reusable preset?") },
+		);
+		if (!choice || choice.id !== 'save') {
+			return;
+		}
+		const name = await this._quickInputService.input({ title: localize('compyleChat.presetName', "Preset name"), placeHolder: localize('compyleChat.presetNamePh', "e.g. Frontend, Security review") });
+		if (!name) {
+			return;
+		}
+		const presets = this._readPresets();
+		presets[name] = this._activeSkills.map(s => s.name);
+		await this._configurationService.updateValue('compyle.brain.skillPresets', presets);
+		this._notificationService.info(localize('compyleChat.presetSaved', "Saved preset \"{0}\".", name));
+	}
+
+	private _renderSkillChips(): void {
+		clearNode(this._skillStrip);
+		for (let i = 0; i < this._activeSkills.length; i++) {
+			const chip = append(this._skillStrip, $('.cpc-skill-chip'));
+			append(chip, $('span.codicon.codicon-lightbulb'));
+			append(chip, $('span', undefined, this._activeSkills[i].name));
+			const removeBtn = append(chip, $('button.cpc-context-chip-remove')) as HTMLButtonElement;
+			append(removeBtn, $('span.codicon.codicon-close'));
+			const idx = i;
+			this._disposables.add(addDisposableListener(removeBtn, 'click', () => {
+				this._activeSkills.splice(idx, 1);
+				this._renderSkillChips();
+			}));
+		}
+	}
+
+	private async _createSkillFromChat(): Promise<void> {
+		if (this._visible.length === 0) {
+			this._notificationService.info(localize('compyleChat.skillNeedsChat', "Have a conversation first, then create a skill from it."));
+			return;
+		}
+		const transcript = this._visible.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n').slice(0, 8000);
+		const prompt = 'From the following conversation, distill a reusable Compyle skill. Respond with ONLY a JSON object and nothing else: {"name": "short title", "description": "one sentence", "tags": ["tag1"], "trigger": ["keyword"], "body": "markdown instructions the assistant should follow"}.\n\nConversation:\n' + transcript;
+		this._notificationService.info(localize('compyleChat.creatingSkill', "Creating a skill from this chat…"));
+		try {
+			const reply = await this._brainService.chat([{ role: 'user', content: prompt }], { maxTokens: 1024, silent: true });
+			const skill = this._extractSkill(reply);
+			if (!skill) {
+				this._notificationService.warn(localize('compyleChat.skillParseFailed', "Could not read a skill from the model's reply. Try again or create one in Skill Studio."));
+				return;
+			}
+			await this._skillService.saveSkill(skill);
+			this._notificationService.info(localize('compyleChat.skillSaved', "Saved skill \"{0}\" to Skill Studio.", skill.name));
+		} catch (err) {
+			this._notificationService.warn(err instanceof Error ? err.message : String(err));
+		}
+	}
+
+	private _extractSkill(reply: string): ICompyleSkill | undefined {
+		const match = reply.match(/\{[\s\S]*\}/);
+		if (!match) {
+			return undefined;
+		}
+		try {
+			const obj = JSON.parse(match[0]) as Partial<ICompyleSkill>;
+			if (!obj.name || !obj.body) {
+				return undefined;
+			}
+			return {
+				name: String(obj.name),
+				description: String(obj.description ?? ''),
+				tags: Array.isArray(obj.tags) ? obj.tags.map(String) : [],
+				trigger: Array.isArray(obj.trigger) ? obj.trigger.map(String) : [],
+				body: String(obj.body),
+			};
+		} catch {
+			return undefined;
+		}
 	}
 
 	// ---- Project / file context ------------------------------------------
