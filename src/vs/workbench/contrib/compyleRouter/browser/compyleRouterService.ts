@@ -19,12 +19,16 @@ import {
 	COMPYLE_ROUTER_MODE_SETTING,
 	COMPYLE_ROUTER_QUALITY_GATE_SETTING,
 	CompyleRouterMode,
+	dedupeRouterRules,
 	ICompyleQualityFinding,
 	ICompyleRouterConfig,
+	ICompyleRouterRule,
 	ICompyleRoutingDecision,
 	matchCustomRule,
 	matchDefaultRoute,
+	parseRouterRulesJsonl,
 	scanQuality,
+	serializeRouterRulesJsonl,
 } from '../common/compyleRouter.js';
 
 export const ICompyleRouterService = createDecorator<ICompyleRouterService>('compyleRouterService');
@@ -57,6 +61,15 @@ export interface ICompyleRouterService {
 	getCustomConfig(): ICompyleRouterConfig;
 	/** Persist new custom rules to the configured JSON file. Creates it if missing. */
 	saveCustomConfig(config: ICompyleRouterConfig): Promise<void>;
+
+	/** List saved training routers (file names without extension) under .compyle/routers/. */
+	listRouters(): Promise<string[]>;
+	/** Read a training router's rules (deduped). Empty when it does not exist. */
+	getRouter(name: string): Promise<ICompyleRouterConfig>;
+	/** Create an empty training router file if it does not already exist. */
+	createRouter(name: string): Promise<void>;
+	/** Append a rule to a training router, merging by keyword-set to keep it compact. */
+	appendRule(name: string, rule: ICompyleRouterRule): Promise<void>;
 }
 
 const LOG_LIMIT = 20;
@@ -158,6 +171,73 @@ export class CompyleRouterService extends Disposable implements ICompyleRouterSe
 		const json = JSON.stringify(config, undefined, '\t');
 		await this._fileService.writeFile(uri, VSBuffer.fromString(json));
 		this._customConfig = config;
+	}
+
+	// ---- Training routers (.compyle/routers/<name>.jsonl) -----------------
+
+	private _routersDir(): URI | undefined {
+		const root = this._contextService.getWorkspace().folders[0]?.uri;
+		return root ? joinPath(root, '.compyle', 'routers') : undefined;
+	}
+
+	private _routerUri(name: string): URI | undefined {
+		const dir = this._routersDir();
+		const safe = name.replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'router';
+		return dir ? joinPath(dir, `${safe}.jsonl`) : undefined;
+	}
+
+	async listRouters(): Promise<string[]> {
+		const dir = this._routersDir();
+		if (!dir) {
+			return [];
+		}
+		try {
+			if (!(await this._fileService.exists(dir))) {
+				return [];
+			}
+			const stat = await this._fileService.resolve(dir);
+			return (stat.children ?? [])
+				.filter(c => !c.isDirectory && c.name.endsWith('.jsonl'))
+				.map(c => c.name.replace(/\.jsonl$/, ''));
+		} catch {
+			return [];
+		}
+	}
+
+	async getRouter(name: string): Promise<ICompyleRouterConfig> {
+		const uri = this._routerUri(name);
+		if (!uri) {
+			return { rules: [] };
+		}
+		try {
+			if (!(await this._fileService.exists(uri))) {
+				return { rules: [] };
+			}
+			const raw = (await this._fileService.readFile(uri)).value.toString();
+			return { rules: dedupeRouterRules(parseRouterRulesJsonl(raw)) };
+		} catch {
+			return { rules: [] };
+		}
+	}
+
+	async createRouter(name: string): Promise<void> {
+		const uri = this._routerUri(name);
+		if (!uri) {
+			return;
+		}
+		if (!(await this._fileService.exists(uri))) {
+			await this._fileService.writeFile(uri, VSBuffer.fromString(''));
+		}
+	}
+
+	async appendRule(name: string, rule: ICompyleRouterRule): Promise<void> {
+		const uri = this._routerUri(name);
+		if (!uri) {
+			return;
+		}
+		const current = await this.getRouter(name);
+		const merged = dedupeRouterRules([...current.rules, rule]);
+		await this._fileService.writeFile(uri, VSBuffer.fromString(serializeRouterRulesJsonl(merged)));
 	}
 
 	private async _loadCustomConfig(): Promise<void> {

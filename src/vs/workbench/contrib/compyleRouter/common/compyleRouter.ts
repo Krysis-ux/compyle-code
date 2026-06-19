@@ -23,16 +23,82 @@ export const COMPYLE_ROUTER_CUSTOM_PATH_SETTING = 'compyle.router.customConfigPa
 export const COMPYLE_ROUTER_QUALITY_GATE_SETTING = 'compyle.router.enableQualityGate';
 export const COMPYLE_ROUTER_LOG_SETTING = 'compyle.router.logRouting';
 
+/** Challenge size band a synthesized rule was learned from. */
+export type CompyleRouterDifficulty = 'line' | 'function' | 'feature' | 'project';
+
 export interface ICompyleRouterRule {
 	readonly name: string;
 	readonly keywords: readonly string[];
 	readonly systemPromptPrefix?: string;
 	/** Informational suggestion only — the router never switches models silently. */
 	readonly suggestedModel?: string;
+	/** Training stats: times this rule's guidance led to a correct result. */
+	readonly correct?: number;
+	/** Training stats: times this rule was synthesized/refined from a failure. */
+	readonly errors?: number;
+	/** A few example prompts that this rule should steer. */
+	readonly examples?: readonly string[];
+	/** Where the rule came from. */
+	readonly source?: 'manual' | 'synth';
+	/** Difficulty band the rule was learned at. */
+	readonly difficulty?: CompyleRouterDifficulty;
 }
 
 export interface ICompyleRouterConfig {
 	readonly rules: readonly ICompyleRouterRule[];
+}
+
+/** Parse a `.jsonl` router file (one rule object per line). Malformed lines are skipped. */
+export function parseRouterRulesJsonl(text: string): ICompyleRouterRule[] {
+	const rules: ICompyleRouterRule[] = [];
+	for (const line of text.split('\n')) {
+		const trimmed = line.trim();
+		if (!trimmed) {
+			continue;
+		}
+		try {
+			const obj = JSON.parse(trimmed) as ICompyleRouterRule;
+			if (obj && typeof obj.name === 'string' && Array.isArray(obj.keywords)) {
+				rules.push(obj);
+			}
+		} catch {
+			// Skip malformed lines rather than throwing.
+		}
+	}
+	return rules;
+}
+
+/** Serialize rules to `.jsonl` (one compact JSON object per line). Append-only friendly, tiny on disk. */
+export function serializeRouterRulesJsonl(rules: readonly ICompyleRouterRule[]): string {
+	return rules.map(r => JSON.stringify(r)).join('\n') + (rules.length ? '\n' : '');
+}
+
+/**
+ * Merge rules that share a keyword-set: sum correct/errors, union examples, keep the
+ * first name/prefix. This keeps a trained router from growing without bound.
+ */
+export function dedupeRouterRules(rules: readonly ICompyleRouterRule[]): ICompyleRouterRule[] {
+	const byKey = new Map<string, ICompyleRouterRule>();
+	for (const rule of rules) {
+		const key = [...rule.keywords].map(k => k.toLowerCase().trim()).sort().join('|');
+		const existing = byKey.get(key);
+		if (!existing) {
+			byKey.set(key, rule);
+			continue;
+		}
+		byKey.set(key, {
+			name: existing.name,
+			keywords: existing.keywords,
+			systemPromptPrefix: existing.systemPromptPrefix || rule.systemPromptPrefix,
+			suggestedModel: existing.suggestedModel || rule.suggestedModel,
+			correct: (existing.correct ?? 0) + (rule.correct ?? 0),
+			errors: (existing.errors ?? 0) + (rule.errors ?? 0),
+			examples: [...new Set([...(existing.examples ?? []), ...(rule.examples ?? [])])].slice(0, 5),
+			source: existing.source ?? rule.source,
+			difficulty: existing.difficulty ?? rule.difficulty,
+		});
+	}
+	return [...byKey.values()];
 }
 
 export interface ICompyleRoutingDecision {
