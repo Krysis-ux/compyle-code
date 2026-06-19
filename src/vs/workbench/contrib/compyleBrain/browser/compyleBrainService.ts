@@ -17,12 +17,15 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { CompyleBrainProvider, CompyleBrainProviderConfig, ILocalModelInfo } from '../common/compyleBrain.js';
 import { COMPYLE_AGENT_MODE_SETTING, getAgentModeSystemPrompt } from '../common/compyleAgentModes.js';
 import { ICompyleRouterService } from '../../compyleRouter/browser/compyleRouterService.js';
+import { ICompyleRoutingDecision } from '../../compyleRouter/common/compyleRouter.js';
 
 export const ICompyleBrainService = createDecorator<ICompyleBrainService>('compyleBrainService');
 
 export interface ICompyleChatMessage {
 	readonly role: 'user' | 'assistant';
 	readonly content: string;
+	/** Base64-encoded images (no data: prefix) for vision models. Ollama /api/chat only. */
+	readonly images?: readonly string[];
 }
 
 export interface ICompyleChatOptions {
@@ -53,6 +56,11 @@ export interface ICompyleBrainService {
 
 	/** Send a chat completion to the configured provider and return the text reply. */
 	chat(messages: ICompyleChatMessage[], options?: ICompyleChatOptions, token?: CancellationToken): Promise<string>;
+	/**
+	 * Stream a chat completion, emitting text deltas via `onToken`, and resolve with the full text.
+	 * Ollama streams natively; other providers fall back to a single non-streaming emit.
+	 */
+	chatStream(messages: ICompyleChatMessage[], onToken: (delta: string) => void, options?: ICompyleChatOptions, token?: CancellationToken): Promise<string>;
 	/** Validate the configuration with a tiny round-trip. */
 	testConnection(): Promise<{ ok: boolean; message: string }>;
 
@@ -152,7 +160,11 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 		}
 	}
 
-	async chat(messages: ICompyleChatMessage[], options: ICompyleChatOptions = {}, token: CancellationToken = CancellationToken.None): Promise<string> {
+	/**
+	 * Shared validation + system-prompt decoration for {@link chat} and {@link chatStream}.
+	 * Throws with a user-facing message if the request cannot proceed.
+	 */
+	private async _prepareChat(messages: ICompyleChatMessage[], options: ICompyleChatOptions): Promise<{ config: CompyleBrainProviderConfig; apiKey: string | undefined; decorated: ICompyleChatOptions; decision: ICompyleRoutingDecision }> {
 		const activeMode = this._configurationService.getValue<string>('compyle.modes.activeMode');
 		if (activeMode === 'focus') {
 			throw new Error(localize('compyle.brain.focusMode', "AI is off in Focus mode. Switch to another mode to use Compyle Brain."));
@@ -191,6 +203,11 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 		const promptText = messages.map(m => m.content).join('\n');
 		const decision = this._routerService.route(promptText);
 		const decorated = this._applyPrefixes(options, decision.systemPrefix);
+		return { config, apiKey, decorated, decision };
+	}
+
+	async chat(messages: ICompyleChatMessage[], options: ICompyleChatOptions = {}, token: CancellationToken = CancellationToken.None): Promise<string> {
+		const { config, apiKey, decorated, decision } = await this._prepareChat(messages, options);
 
 		let reply: string;
 		if (config.provider === CompyleBrainProvider.Anthropic) {
@@ -209,6 +226,29 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			const banner = localize('compyle.router.qualityBanner', "⚠️ Compyle Router flagged this output. Review before use:\n{0}", lines);
 			return `${banner}\n\n${reply}`;
 		}
+		return reply;
+	}
+
+	async chatStream(messages: ICompyleChatMessage[], onToken: (delta: string) => void, options: ICompyleChatOptions = {}, token: CancellationToken = CancellationToken.None): Promise<string> {
+		const { config, apiKey, decorated, decision } = await this._prepareChat(messages, options);
+
+		let reply: string;
+		if (config.provider === CompyleBrainProvider.Ollama) {
+			reply = await this._chatOllamaStream(config, messages, decorated, onToken, token);
+		} else {
+			// Providers without a wired-up streaming path: emit the whole reply once.
+			reply = config.provider === CompyleBrainProvider.Anthropic
+				? await this._chatAnthropic(config, apiKey, messages, decorated, token)
+				: await this._chatOpenAICompatible(config, apiKey, messages, decorated, token);
+			if (reply) {
+				onToken(reply);
+			}
+		}
+
+		// Quality gate runs after streaming for logging; the banner is omitted to avoid
+		// rewriting already-streamed text (callers can surface router findings separately).
+		const review = this._routerService.review(reply);
+		this._routerService.log(decision, review.findings.length);
 		return reply;
 	}
 
@@ -278,11 +318,16 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 		return json?.choices?.[0]?.message?.content ?? '';
 	}
 
-	/** Native Ollama /api/chat so context length, keep-alive and sampling options apply. */
-	private async _chatOllama(config: CompyleBrainProviderConfig, messages: ICompyleChatMessage[], options: ICompyleChatOptions, token: CancellationToken): Promise<string> {
+	/** Map a chat message into Ollama's wire shape, attaching base64 images when present. */
+	private _ollamaMessage(m: ICompyleChatMessage): { role: string; content: string; images?: readonly string[] } {
+		return m.images?.length ? { role: m.role, content: m.content, images: m.images } : { role: m.role, content: m.content };
+	}
+
+	/** Build the Ollama /api/chat request body (system message + sampling options). */
+	private _ollamaBody(config: CompyleBrainProviderConfig, messages: ICompyleChatMessage[], options: ICompyleChatOptions, stream: boolean): object {
 		const fullMessages = options.system
-			? [{ role: 'system', content: options.system }, ...messages]
-			: messages.map(m => ({ role: m.role, content: m.content }));
+			? [{ role: 'system', content: options.system }, ...messages.map(m => this._ollamaMessage(m))]
+			: messages.map(m => this._ollamaMessage(m));
 		const ollamaOptions: Record<string, number> = {
 			temperature: config.temperature,
 			num_predict: options.maxTokens ?? config.maxTokens ?? 1024,
@@ -290,18 +335,22 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 		if (config.contextLength > 0) {
 			ollamaOptions.num_ctx = config.contextLength;
 		}
-		const body = {
+		return {
 			model: config.model,
 			messages: fullMessages,
-			stream: false,
+			stream,
 			keep_alive: config.keepAlive || '5m',
 			options: ollamaOptions,
 		};
+	}
+
+	/** Native Ollama /api/chat so context length, keep-alive and sampling options apply. */
+	private async _chatOllama(config: CompyleBrainProviderConfig, messages: ICompyleChatMessage[], options: ICompyleChatOptions, token: CancellationToken): Promise<string> {
 		const context = await this._requestService.request({
 			type: 'POST',
 			url: `${this._ollamaBase(config)}/api/chat`,
 			headers: { 'content-type': 'application/json' },
-			data: JSON.stringify(body),
+			data: JSON.stringify(this._ollamaBody(config, messages, options, false)),
 			callSite: 'compyleBrain.chat',
 		}, token);
 
@@ -310,6 +359,71 @@ export class CompyleBrainService extends Disposable implements ICompyleBrainServ
 			throw new Error(json.error);
 		}
 		return json?.message?.content ?? '';
+	}
+
+	/** Streaming Ollama /api/chat: emits each content delta and resolves with the full text. */
+	private async _chatOllamaStream(config: CompyleBrainProviderConfig, messages: ICompyleChatMessage[], options: ICompyleChatOptions, onToken: (delta: string) => void, token: CancellationToken): Promise<string> {
+		const context = await this._requestService.request({
+			type: 'POST',
+			url: `${this._ollamaBase(config)}/api/chat`,
+			headers: { 'content-type': 'application/json' },
+			data: JSON.stringify(this._ollamaBody(config, messages, options, true)),
+			callSite: 'compyleBrain.chatStream',
+		}, token);
+
+		if (!isSuccess(context)) {
+			const text = await asText(context);
+			throw new Error(text || `Server returned ${context.res.statusCode}`);
+		}
+
+		// Ollama streams newline-delimited JSON: { message: { content }, done } until done.
+		let full = '';
+		await new Promise<void>((resolve, reject) => {
+			const cancelListener = token.onCancellationRequested(() => resolve());
+			let buffer = '';
+			const handleLine = (line: string) => {
+				const trimmed = line.trim();
+				if (!trimmed) {
+					return;
+				}
+				try {
+					const obj = JSON.parse(trimmed) as { message?: { content?: string }; error?: string };
+					if (obj.error) {
+						reject(new Error(obj.error));
+						return;
+					}
+					const delta = obj.message?.content ?? '';
+					if (delta) {
+						full += delta;
+						onToken(delta);
+					}
+				} catch {
+					// Ignore partial / non-JSON lines.
+				}
+			};
+			listenStream(context.stream, {
+				onData: chunk => {
+					buffer += chunk.toString();
+					let newlineIndex: number;
+					while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+						handleLine(buffer.slice(0, newlineIndex));
+						buffer = buffer.slice(newlineIndex + 1);
+					}
+				},
+				onError: error => {
+					cancelListener.dispose();
+					reject(error);
+				},
+				onEnd: () => {
+					cancelListener.dispose();
+					if (buffer.length > 0) {
+						handleLine(buffer);
+					}
+					resolve();
+				},
+			}, token);
+		});
+		return full;
 	}
 
 	/** Base URL for Ollama's native API, derived from the configured OpenAI-compatible endpoint. */
