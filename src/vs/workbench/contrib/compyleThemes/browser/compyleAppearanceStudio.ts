@@ -36,6 +36,7 @@ function styleInfos(): ICompyleVibrancyStyleInfo[] {
 		{ id: 'acrylic', name: localize("cas.style.acrylic", "Acrylic"), description: localize("cas.style.acrylic.desc", "Saturated, tinted, lively depth.") },
 		{ id: 'mica', name: localize("cas.style.mica", "Mica"), description: localize("cas.style.mica.desc", "Subtle, quiet material tint.") },
 		{ id: 'tint', name: localize("cas.style.tint", "Tint"), description: localize("cas.style.tint.desc", "Translucent accent wash.") },
+		{ id: 'liquidglass', name: localize("cas.style.liquidglass", "Liquid Glass"), description: localize("cas.style.liquidglass.desc", "Apple-style glass: refraction, depth, and a bright specular edge.") },
 	];
 }
 

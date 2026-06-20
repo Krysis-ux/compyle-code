@@ -23,7 +23,7 @@ export type CompyleAppearanceMode = 'standard' | 'vibrancy';
  * Visual flavor of the frosted glass. These are CSS interpretations of familiar
  * desktop materials — they do not call native OS APIs.
  */
-export type CompyleVibrancyStyle = 'frost' | 'acrylic' | 'mica' | 'tint';
+export type CompyleVibrancyStyle = 'frost' | 'acrylic' | 'mica' | 'tint' | 'liquidglass';
 
 export interface ICompyleVibrancyTokens {
 	readonly mode: CompyleAppearanceMode;
@@ -60,7 +60,7 @@ export const COMPYLE_REDUCED_MOTION_SETTING = 'compyle.appearance.reducedMotion'
 export const COMPYLE_COMPACT_MODE_SETTING = 'compyle.appearance.compactMode';
 export const COMPYLE_MINIMAL_MODE_SETTING = 'compyle.minimalMode.enabled';
 
-export const COMPYLE_VIBRANCY_STYLES: readonly CompyleVibrancyStyle[] = ['frost', 'acrylic', 'mica', 'tint'];
+export const COMPYLE_VIBRANCY_STYLES: readonly CompyleVibrancyStyle[] = ['frost', 'acrylic', 'mica', 'tint', 'liquidglass'];
 
 export interface ICompyleVibrancyStyleInfo {
 	readonly id: CompyleVibrancyStyle;

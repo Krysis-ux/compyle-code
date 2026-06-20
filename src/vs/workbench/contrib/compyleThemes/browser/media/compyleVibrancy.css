@@ -144,6 +144,62 @@
 	--compyle-frost-border: color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 42%, transparent);
 }
 
+/* Liquid Glass: Apple-style refraction, depth, and a bright specular edge. */
+.compyle-vibrancy-style-liquidglass {
+	--compyle-frost: color-mix(in srgb,
+		color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-editor-background)) 72%, var(--compyle-tint, var(--vscode-focusBorder)))
+		calc(var(--compyle-opacity) * 100%), transparent);
+	--compyle-frost-saturate: saturate(1.6);
+	--compyle-glass-blur: blur(var(--compyle-blur, 18px)) saturate(1.6) brightness(1.06);
+	--compyle-frost-border: color-mix(in srgb, white 22%, transparent);
+}
+
+/* Specular edge + a soft top highlight on the frosted chrome and floating panes. */
+.compyle-vibrancy-style-liquidglass .monaco-workbench .part.activitybar,
+.compyle-vibrancy-style-liquidglass .monaco-workbench .part.sidebar,
+.compyle-vibrancy-style-liquidglass .monaco-workbench .part.panel,
+.compyle-vibrancy-style-liquidglass .monaco-workbench .part.auxiliarybar,
+.compyle-vibrancy-style-liquidglass .monaco-workbench .part.titlebar,
+.compyle-vibrancy-style-liquidglass .monaco-workbench .part.statusbar,
+.compyle-vibrancy-style-liquidglass .compyle-panel,
+.compyle-vibrancy-style-liquidglass .compyle-card,
+.compyle-vibrancy-style-liquidglass .editor-widget.suggest-widget,
+.compyle-vibrancy-style-liquidglass .monaco-hover,
+.compyle-vibrancy-style-liquidglass .monaco-editor .find-widget,
+.compyle-vibrancy-style-liquidglass .notifications-toasts .notification-toast,
+.compyle-vibrancy-style-liquidglass .monaco-menu .monaco-menu-container {
+	background-image:
+		linear-gradient(160deg, color-mix(in srgb, white 14%, transparent) 0%, transparent 42%),
+		linear-gradient(to top, color-mix(in srgb, var(--compyle-tint, var(--vscode-focusBorder)) 8%, transparent), transparent 60%) !important;
+	box-shadow:
+		inset 0 1px 0 color-mix(in srgb, white 55%, transparent),
+		inset 1px 0 0 color-mix(in srgb, white 24%, transparent),
+		inset 0 -1px 0 color-mix(in srgb, black 14%, transparent),
+		0 10px 34px rgba(0, 0, 0, 0.30) !important;
+}
+
+/* Floating panes read as discrete glass — round them. */
+.compyle-vibrancy-style-liquidglass .compyle-panel,
+.compyle-vibrancy-style-liquidglass .compyle-card,
+.compyle-vibrancy-style-liquidglass .editor-widget.suggest-widget,
+.compyle-vibrancy-style-liquidglass .monaco-hover,
+.compyle-vibrancy-style-liquidglass .monaco-editor .find-widget,
+.compyle-vibrancy-style-liquidglass .notifications-toasts .notification-toast,
+.compyle-vibrancy-style-liquidglass .monaco-menu .monaco-menu-container {
+	border-radius: 14px !important;
+}
+
+/* True refraction where the engine supports url() backdrop filters (no-op in Chromium, which falls back to the blur above). */
+@supports (backdrop-filter: url("#x")) {
+	.compyle-vibrancy-style-liquidglass .monaco-workbench .part.sidebar,
+	.compyle-vibrancy-style-liquidglass .monaco-workbench .part.auxiliarybar,
+	.compyle-vibrancy-style-liquidglass .monaco-workbench .part.panel,
+	.compyle-vibrancy-style-liquidglass .editor-widget.suggest-widget,
+	.compyle-vibrancy-style-liquidglass .monaco-hover {
+		backdrop-filter: blur(var(--compyle-blur, 18px)) saturate(1.6) brightness(1.06) url("#compyle-liquid") !important;
+	}
+}
+
 /* ---- Compact mode --------------------------------------------------------- */
 
 .compyle-compact .monaco-workbench .tabs-container > .tab {

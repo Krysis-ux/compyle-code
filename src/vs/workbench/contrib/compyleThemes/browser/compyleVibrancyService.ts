@@ -73,6 +73,7 @@ export class CompyleVibrancyService extends Disposable implements ICompyleVibran
 	readonly onDidChangeAppearance = this._onDidChangeAppearance.event;
 
 	private readonly _containers = new Set<HTMLElement>();
+	private readonly _liquidFilters = new WeakMap<Document, SVGElement>();
 	private _preview: { mode: CompyleAppearanceMode; style: CompyleVibrancyStyle } | undefined;
 
 	constructor(
@@ -228,9 +229,70 @@ export class CompyleVibrancyService extends Disposable implements ICompyleVibran
 			el.classList.add(`compyle-vibrancy-style-${tokens.style}`);
 		}
 
+		this._ensureLiquidFilter(el, vibrancy && tokens.style === 'liquidglass');
+
 		el.classList.toggle('compyle-reduce-motion', tokens.reducedMotion);
 		el.classList.toggle('compyle-compact', tokens.compactMode);
 		el.classList.toggle('compyle-minimal', this.isMinimalMode());
+	}
+
+	/**
+	 * Inject (or remove) the SVG displacement filter that the Liquid Glass style
+	 * references via `backdrop-filter: url(#compyle-liquid)`. One per document; a
+	 * no-op where the browser does not support filtered backdrops (CSS falls back).
+	 */
+	private _ensureLiquidFilter(el: HTMLElement, enabled: boolean): void {
+		const doc = el.ownerDocument;
+		const existing = this._liquidFilters.get(doc);
+		if (!enabled) {
+			existing?.remove();
+			this._liquidFilters.delete(doc);
+			return;
+		}
+		if (existing && existing.isConnected) {
+			return;
+		}
+		const NS = 'http://www.w3.org/2000/svg';
+		const svg = doc.createElementNS(NS, 'svg');
+		svg.setAttribute('id', 'compyle-liquid-svg');
+		svg.setAttribute('width', '0');
+		svg.setAttribute('height', '0');
+		svg.setAttribute('aria-hidden', 'true');
+		svg.style.position = 'absolute';
+		svg.style.pointerEvents = 'none';
+
+		const filter = doc.createElementNS(NS, 'filter');
+		filter.setAttribute('id', 'compyle-liquid');
+		filter.setAttribute('x', '-20%');
+		filter.setAttribute('y', '-20%');
+		filter.setAttribute('width', '140%');
+		filter.setAttribute('height', '140%');
+
+		const turbulence = doc.createElementNS(NS, 'feTurbulence');
+		turbulence.setAttribute('type', 'fractalNoise');
+		turbulence.setAttribute('baseFrequency', '0.008 0.012');
+		turbulence.setAttribute('numOctaves', '2');
+		turbulence.setAttribute('seed', '7');
+		turbulence.setAttribute('result', 'noise');
+
+		const blur = doc.createElementNS(NS, 'feGaussianBlur');
+		blur.setAttribute('in', 'noise');
+		blur.setAttribute('stdDeviation', '2');
+		blur.setAttribute('result', 'blurred');
+
+		const displacement = doc.createElementNS(NS, 'feDisplacementMap');
+		displacement.setAttribute('in', 'SourceGraphic');
+		displacement.setAttribute('in2', 'blurred');
+		displacement.setAttribute('scale', '14');
+		displacement.setAttribute('xChannelSelector', 'R');
+		displacement.setAttribute('yChannelSelector', 'G');
+
+		filter.appendChild(turbulence);
+		filter.appendChild(blur);
+		filter.appendChild(displacement);
+		svg.appendChild(filter);
+		(doc.body ?? el).appendChild(svg);
+		this._liquidFilters.set(doc, svg);
 	}
 }
 
